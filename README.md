@@ -22,14 +22,21 @@ HD Movie playback is achieved using [libvlc](https://www.videolan.org/vlc/libvlc
 
   
 ## Installation:
-- Pending.
+- Click on [Releases](https://github.com/mattwells77/Privateer_2_The_Darkening_Enhancement_Patch/releases) and download the latest "p2_dark_en_x.x.x.zip" where "x" is the version number and [libvlc_min_pack_3.0.21.zip](https://github.com/mattwells77/Wing_Commander_III_Enhancement_Patch/releases/tag/libvlc_min_pack_3.0.21) files. Extract the contents of these files to your Privateer 2 Install directory.
+- Run the "DARK.EXE" to play.
+
+#### CD version notes:
+- The patch is expecting a complete hard drive install. If you intend to play the game from CD's set "NO_CD=0" in the "p2_dark_en.ini".
+
+#### GOG DOS version notes:
+- You must first upgrade to the Windows version to play. If installing [DOS to Windows Deluxe Edition Patch](https://originalthp.solsector.net/privateer2win95/ ""), you won't need to install the "Privateer 2 Enhancement patch by HCl" as his and my patches do similar things. You also shouldn't use the "LAUNCHER.EXE" that comes with the patch but instead run "DARK.EXE" to play the game.
 
 ## Compiling:
 - To compile, this project requires the [VLC media player sdk vlc-3.0.21](https://download.videolan.org/pub/videolan/vlc/last/win32/) and the [libvlcpp C++ bindings](https://github.com/videolan/libvlcpp). I've set up relative paths for these, and they should be installed adjacent to the projects solution folder to avoid the need to modify any project settings.
 - There is also an included batch file "post_build_copy_to_game_folder.cmd". That is set to copy the newly created DLL to your game folder after the build process completes. This should be edited to match your game installation path.
 
 ## Donations:
-I don't need your money. If however, my work has inspired you with an overwhelming urge to part with some of your hard earned cash. Have at it! Cheers.
+I don't need your money. If however, my work has inspired you with an overwhelming urge to part with some of your hard earned cash. Then have at it! Cheers.
 | Paypal |
 | ------ |
 [![](https://www.paypalobjects.com/en_AU/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?business=9MPA8DTFJQFKW&no_recurring=1&currency_code=AUD)
