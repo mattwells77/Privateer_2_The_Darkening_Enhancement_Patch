@@ -9,7 +9,7 @@ HD Movie playback is achieved using [libvlc](https://www.videolan.org/vlc/libvlc
 ## Current list of enhancements:
 - Support for better quality movies via [libvlc](https://www.videolan.org/vlc/libvlc.html "libVLC is the core engine and the interface to the multimedia framework on which VLC media player is based.") (no alternative movie packages exist at present). 
 - Windows UAC compliance when the game is installed under "Program Files (x86)".
-- Improved windowed mode, with window resizing options and mouse locking only when required in-game.
+- Windowed mode, with window resizing options and mouse locking only when required in-game.
 
 ## Intended future enhancements:
 - HD wide screen space.
