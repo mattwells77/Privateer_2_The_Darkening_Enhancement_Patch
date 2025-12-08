@@ -5,21 +5,20 @@ This patch seems to work well with the [DOS to Windows Deluxe Edition Patch](htt
 This patch uses DirectX 11 for rendering and will likely require Windows 10 or greater to use.
 
 HD Movie playback is achieved using [libvlc](https://www.videolan.org/vlc/libvlc.html "libVLC is the core engine and the interface to the multimedia framework on which VLC media player is based.").
-## Current list of enhancements:
 
+## Current list of enhancements:
 - Support for better quality movies via [libvlc](https://www.videolan.org/vlc/libvlc.html "libVLC is the core engine and the interface to the multimedia framework on which VLC media player is based.") (no alternative movie packages exist at present). 
 - Windows UAC compliance when the game is installed under "Program Files (x86)".
+- Improved windowed mode, with window resizing options and mouse locking only when required in-game.
 
 ## Intended future enhancements:
-
 - HD wide screen space.
 - Joystick\Controller axis button mapping.
 
-  ## Current Issues (BUGS):
-
+  ## Current issues (BUGS):
 - Sound stuttering.
 - Midi music not playing.
-- Ocasional crashes at the end of movie playback(due to sound issues).
+- Occasional crashes at the end of movie playback(due to sound issues).
 
   
 ## Installation:
