@@ -79,10 +79,17 @@ static HRESULT __stdcall Movie_Create_Surface_1(LPDDSURFACEDESC lp_desc, DrawSur
     static BOOL interlaced_movies = ConfigReadInt(L"MOVIES", L"SHOW_ORIGINAL_MOVIES_INTERLACED", CONFIG_MOVIES_SHOW_ORIGINAL_INTERLACED);
     SCALE_TYPE scale_type = SCALE_TYPE::fit;
 
-    if (!surface_movieTGV || surface_movieTGV->GetWidth() != lp_desc->dwWidth || surface_movieTGV->GetHeight() != lp_desc->dwHeight * 2) {
+    DWORD projected_width = lp_desc->dwWidth;
+    DWORD projected_height = lp_desc->dwHeight;
+    if (interlaced_movies) {
+        projected_width += projected_width;
+        projected_height += projected_height;
+    }
+
+    if (!surface_movieTGV || surface_movieTGV->GetWidth() != projected_width || surface_movieTGV->GetHeight() != projected_height) {
         if (surface_movieTGV)
             delete surface_movieTGV;
-        surface_movieTGV = new RenderTarget(0, 0, lp_desc->dwWidth, lp_desc->dwHeight * 2, 32, 0x00000000);
+        surface_movieTGV = new RenderTarget(0, 0, projected_width, projected_height, 32, 0x00000000);
 
         if (interlaced_movies) {
             scale_type = SCALE_TYPE::fit_best;
@@ -94,9 +101,9 @@ static HRESULT __stdcall Movie_Create_Surface_1(LPDDSURFACEDESC lp_desc, DrawSur
 
     if (!movie_tgv_1) {
         movie_tgv_1 = new DrawSurface8(lp_desc->dwWidth, lp_desc->dwHeight, false, 0);
-        Debug_Info_Movie("Movie Create Surface 1 movie_tgv_1 height %d", lp_desc->dwHeight);
+        Debug_Info_Movie("Movie Create Surface 1 movie_tgv_1 width %d, height %d", lp_desc->dwWidth, lp_desc->dwHeight);
         Set_Scanline_Tex_Height((float)lp_desc->dwHeight);
-        movie_tgv_1->ScaleTo((float)lp_desc->dwWidth, (float)lp_desc->dwHeight * 2, SCALE_TYPE::fill);
+        movie_tgv_1->ScaleTo((float)projected_width, (float)projected_height, SCALE_TYPE::fill);
         if (interlaced_movies)
             movie_tgv_1->Set_Default_Pixel_Shader(pd3d_PS_Basic_Tex_8_scan_lines);
     }
@@ -420,4 +427,25 @@ void Modifications_Movies() {
     FuncReplace32(0x41D2B6, 0x04BEDA, (DWORD)&Play_Movie);
     FuncReplace32(0x41D2D1, 0x04BEBF, (DWORD)&Play_Movie);
     FuncReplace32(0x41D2E8, 0x04BEA8, (DWORD)&Play_Movie);
+
+    //------------------------------------------------
+    //jump over interlaced check 0x40 ?
+    //prevent dx surface being widened to width x 2.
+    //forces the use of dx surface pitch when drawing.
+
+    //when creating dx surfaces.
+    MemWrite8(0x4894BC, 0x74, 0xEB);
+    //not 8 bit?
+    MemWrite8(0x4895F9, 0x74, 0xEB);
+    //3
+    MemWrite8(0x48961D, 0x74, 0xEB);
+    //4
+    MemWrite16(0x489674, 0x0675, 0x9090);
+    //in 1 first func
+    MemWrite8(0x4934A1, 0x74, 0xEB);
+    //in 1 draw func
+    MemWrite8(0x49350F, 0x74, 0xEB);
+    //in 1 draw func
+    MemWrite16(0x493590, 0x840F, 0xE990);
+    //------------------------------------------------
 }
