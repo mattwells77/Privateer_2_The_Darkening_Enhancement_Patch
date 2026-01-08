@@ -61,6 +61,26 @@ void* p_p2_check_key_state = nullptr;
 void* p_p2_space_main = nullptr;
 void* p_p2_options_screen = nullptr;
 
+void* p_p2_music_start = nullptr;
+
+DWORD(*p2_music_stop)() = nullptr;
+
+
+//____________________________________________________________
+DWORD p2_music_start(DWORD flag_1, DWORD flag_2, DWORD flag_3) {
+	DWORD error_val = 0;
+	__asm {
+		mov ecx, flag_3
+		mov ebx, flag_2
+		mov edx, flag_1
+		mov eax, 0	//const char* installed_path unused.
+		call p_p2_music_start
+		mov error_val, eax
+	}
+	return error_val;
+
+}
+
 
 //__________________________________________________________________
 bool p2_check_key_state(DWORD scan_code, DWORD flag_1, DWORD flag_2) {
@@ -115,4 +135,7 @@ void DARK_Setup() {
 	p_p2_space_main = (void*)0x438137;
 
 	p_p2_options_screen = (void*)0x45CE5C;
+
+	p_p2_music_start = (void*)0x418E08;
+	p2_music_stop = (DWORD(*)())0x4194D4;
 }

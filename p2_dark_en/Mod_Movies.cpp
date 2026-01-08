@@ -271,8 +271,9 @@ static void __declspec(naked) movie_get_surface_dimensions(void) {
 
 //______________________________________________________________________________
 static BOOL Play_Movie(const char* tgv_path, BOOL clear_on_start, BOOL fade_out) {
-
+    
     Debug_Info_Movie("Play_Movie_Sequence: main_path: %s, fade_in: %d, fade_out: %d", tgv_path, clear_on_start, fade_out);
+    p2_music_stop();
 
     if (pMovie_vlc)
         delete pMovie_vlc;
@@ -325,6 +326,7 @@ static BOOL Play_Movie(const char* tgv_path, BOOL clear_on_start, BOOL fade_out)
 
     Debug_Info_Movie("HD Movie: Done");
 
+    p2_music_start(1, 8, 0);
     //return escape flag to skip other movies in sequence.
     return escape_flag;
 }

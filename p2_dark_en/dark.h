@@ -71,6 +71,8 @@ extern void** pp_p2_wail32_midi_sequence_handle;
 
 bool p2_check_key_state(DWORD scan_code, DWORD flag_1, DWORD flag_2);
 
+DWORD p2_music_start(DWORD flag_1, DWORD flag_2, DWORD flag_3);
+extern DWORD(*p2_music_stop)();
 
 extern void(*p2_error_message_box)(const char* msg);
 
