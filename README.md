@@ -15,14 +15,14 @@ HD Movie playback is achieved using [libvlc](https://www.videolan.org/vlc/libvlc
 - HD wide screen space.
 - Joystick\Controller axis button mapping.
 
-  ## Current issues (BUGS):
-- Sound stuttering.
-- Midi music not playing.
-- Occasional crashes at the end of movie playback(due to sound issues).
-
+## Acknowledgements:
+- Most of the sound issues were fixed by rerouting function calls within the Miles Sound System library "WAIL32.DLL" to a newer version "MSS32.DLL". Credit for the method used should go to [MildewMan1](https://github.com/MildewMan1 ""), Who used this in his [DeadlockFixes](https://github.com/MildewMan1/DeadlockFixes "") project.
+- I'd also like to thank the creators of [radgametools](https://github.com/vogonsorg/radgametools ""), a compilation of Bink, Smacker, miles, etc binaries. From which, after a lot of trial and error I found a version of "MSS32.DLL" with the least amount of sound stutter. This file was originally listed in their project as "6.1d-mss32.DLL".
   
 ## Installation:
-- Click on [Releases](https://github.com/mattwells77/Privateer_2_The_Darkening_Enhancement_Patch/releases) and download the latest "p2_dark_en_x.x.x.zip" where "x" is the version number and [libvlc_min_pack_3.0.21.zip](https://github.com/mattwells77/Wing_Commander_III_Enhancement_Patch/releases/tag/libvlc_min_pack_3.0.21) files. Extract the contents of these files to your Privateer 2 Install directory.
+- Click on [Releases](https://github.com/mattwells77/Privateer_2_The_Darkening_Enhancement_Patch/releases) and download the latest "p2_dark_en_x.x.x.zip" where "x" is the version number and [libvlc_min_pack_3.0.21.zip](https://github.com/mattwells77/Wing_Commander_III_Enhancement_Patch/releases/tag/libvlc_min_pack_3.0.21) files.
+- You may wish to rename or back-up the original "WAIL32.DLL", as this file will be replaced by this patch.
+- Extract the contents of these files to your Privateer 2 Install directory.
 - Run the "DARK.EXE" to play.
 
 #### CD version notes:
