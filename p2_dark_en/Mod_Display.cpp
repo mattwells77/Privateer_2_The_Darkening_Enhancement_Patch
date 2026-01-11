@@ -769,18 +769,27 @@ static void __declspec(naked) wait_vblank(void) {
 }
 
 
-//_________________________________________________________________________________________________________________________________________________________
-static void Draw_Image_Buffer(IMAGE_BUFFER* from_img_buff, LONG sub_left, LONG sub_top, LONG sub_right, LONG sub_bottom, DrawSurface8_RT* p_to_surface8_rt) {
+//____________________________________________________________________________________________________________________________________________________________________________________
+static void Draw_Image_Buffer(IMAGE_BUFFER* from_img_buff, LONG sub_left, LONG sub_top, LONG sub_right, LONG sub_bottom, DrawSurface8_RT* p_to_surface8_rt, LONG to_left, LONG to_top) {
 
     if (!p_to_surface8_rt)
         return;
     LONG to_right = (LONG)p_to_surface8_rt->GetWidth() - 1;
     LONG to_bottom = (LONG)p_to_surface8_rt->GetHeight() - 1;
 
+    if (to_left < 0) {
+        sub_left -= to_left;
+        to_left = 0;
+    }
+    if (to_top < 0) {
+        sub_top -= to_top;
+        to_top = 0;
+    }
     if (sub_left < 0)
         sub_left = 0;
     if (sub_top < 0)
         sub_top = 0;
+
     if (sub_right > from_img_buff->right)
         sub_right = from_img_buff->right;
     if (sub_bottom > from_img_buff->bottom)
@@ -790,6 +799,11 @@ static void Draw_Image_Buffer(IMAGE_BUFFER* from_img_buff, LONG sub_left, LONG s
     if (sub_bottom > to_bottom)
         sub_bottom = to_bottom;
 
+    if (sub_left > sub_right)
+        return;
+    if (sub_top > sub_bottom)
+        return;
+
     DWORD sub_width = sub_right - sub_left + 1;
     DWORD sub_height = sub_bottom - sub_top + 1;
 
@@ -797,14 +811,14 @@ static void Draw_Image_Buffer(IMAGE_BUFFER* from_img_buff, LONG sub_left, LONG s
 
     BYTE* from_buff = from_img_buff->buff;
 
-    //Debug_Info("Draw_Image_Buffer %X, x:%d, y:%d, width:%d, height:%d", from_buff, sub_left, sub_top, sub_width, sub_height);
+    //Debug_Info("Draw_Image_Buffer %X, sub_left:%d, sub_top:%d, width:%d, height:%d", from_buff, sub_left, sub_top, sub_width, sub_height);
     BYTE* pSurface = nullptr;
     LONG pitch = 0;
     if (p_to_surface8_rt->Lock((VOID**)&pSurface, &pitch) != S_OK)
         return;
 
     from_buff += sub_top * from_width + sub_left;
-    pSurface += sub_top * pitch + sub_left;
+    pSurface += to_top * pitch + to_left;
     for (DWORD y = 0; y < sub_height; y++) {
         for (DWORD x = 0; x < sub_width; x++)
             pSurface[x] = from_buff[x];
@@ -815,11 +829,10 @@ static void Draw_Image_Buffer(IMAGE_BUFFER* from_img_buff, LONG sub_left, LONG s
     p_to_surface8_rt->Unlock();
 }
 
-
 //__________________________________________________________________________________________________________________________
 static void Draw_Image_Buffer_GUI(IMAGE_BUFFER* from_img_buff, LONG sub_left, LONG sub_top, LONG sub_right, LONG sub_bottom) {
 
-    Draw_Image_Buffer(from_img_buff, sub_left, sub_top, sub_right, sub_bottom, surface_gui);
+    Draw_Image_Buffer(from_img_buff, sub_left, sub_top, sub_right, sub_bottom, surface_gui, sub_left, sub_top);
     Display_Dx_Present(PRESENT_TYPE::gui);
 }
 
@@ -827,21 +840,75 @@ static void Draw_Image_Buffer_GUI(IMAGE_BUFFER* from_img_buff, LONG sub_left, LO
 //____________________________________________________________________________________________________________________________
 static void Draw_Image_Buffer_Rect_GUI(IMAGE_BUFFER_RECT* p_img, LONG sub_left, LONG sub_top, LONG sub_right, LONG sub_bottom) {
 
-    Draw_Image_Buffer(p_img->img_buff, sub_left, sub_top, sub_right, sub_bottom, surface_gui);
+    Draw_Image_Buffer(p_img->img_buff, sub_left, sub_top, sub_right, sub_bottom, surface_gui, sub_left, sub_top);
 }
 
 
 //_____________________________________________________________________________________________________________________________
 static void Draw_Image_Buffer_Rect_Movie_Text_Top(IMAGE_BUFFER_RECT* from_struct, LONG left, LONG top, LONG right, LONG bottom) {
+    
+    surface_gui->Clear_Texture(0x00000000);
 
-    Draw_Image_Buffer_Rect_GUI(from_struct, left, top, right, bottom);
+    LONG movie_height = 0;
+    if (pMovie_vlc) {
+        DrawSurface* surface = pMovie_vlc->Get_Surface();
+        movie_height = (LONG)surface->GetScaledHeight();
+    }
+    else if (surface_movieTGV) 
+        movie_height = (LONG)surface_movieTGV->GetScaledHeight();
+
+    LONG text_y = 0;
+    LONG text_height = bottom - top;
+    LONG black_bar_height = (clientHeight - movie_height) / 2;
+
+    //draw text in the black area above the movie if there is room.
+    if (black_bar_height >= text_height) {
+        text_y = (clientHeight - movie_height) / 4;
+        text_y = (480 * text_y) / clientHeight;
+        text_y -= text_height / 2;
+    }
+    else //otherwise draw text over the movie at the top rather than overlapping the black bar.
+        text_y = black_bar_height;
+    
+    if (text_y < 0)
+        text_y = 0;
+
+    //sub 1 from bottom, to prevent drawing a line of junk at the bottom of buffer.
+    Draw_Image_Buffer(from_struct->img_buff, left, top, right, bottom - 1, surface_gui, left, text_y);
 }
 
 
 //________________________________________________________________________________________________________________________________
 static void Draw_Image_Buffer_Rect_Movie_Text_Bottom(IMAGE_BUFFER_RECT* from_struct, LONG left, LONG top, LONG right, LONG bottom) {
+    
+    LONG movie_height = 0;
+    if (pMovie_vlc) {
+        DrawSurface* surface = pMovie_vlc->Get_Surface();
+        movie_height = (LONG)surface->GetScaledHeight();
+    }
+    else if (surface_movieTGV)
+        movie_height = (LONG)surface_movieTGV->GetScaledHeight();
 
-    Draw_Image_Buffer_Rect_GUI(from_struct, left, top, right, bottom);
+
+    LONG text_y = 0;
+    LONG text_height = bottom - top;
+    LONG black_bar_height = (clientHeight - movie_height) / 2;
+
+    //draw text in the black area under the movie if there is room.
+    if (black_bar_height >= text_height) {
+        text_y = (clientHeight - movie_height) / 4;
+        text_y = (480 * text_y) / clientHeight;
+        text_y = 480 - text_y - text_height / 2;
+    }
+    else //otherwise draw text over the movie at the bottom rather than overlapping the black bar.
+        text_y = 480 - black_bar_height - text_height;
+
+    if (text_y > 480 - text_height)
+        text_y = 480 - text_height;
+
+    //sub 1 from bottom, to prevent drawing a line of junk at the bottom of buffer.
+    Draw_Image_Buffer(from_struct->img_buff, left, top, right, bottom - 1, surface_gui, left, text_y);
+
     Display_Dx_Present(PRESENT_TYPE::movie);
 }
 
@@ -1520,7 +1587,7 @@ static void __declspec(naked) cursor_clip_conversation_choice(void) {
 
     __asm {
         mov clip_cursor, TRUE
-        call wait_vblank_draw_main_surface
+        //call wait_vblank_draw_main_surface // unnecessary, causes a flicker between movie and choice text screen.
         ret
     }
 }
