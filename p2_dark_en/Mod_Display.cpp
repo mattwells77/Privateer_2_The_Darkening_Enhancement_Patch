@@ -1654,40 +1654,6 @@ static void __declspec(naked) cursor_clip_space_exit(void) {
 }
 
 
-//_________________________
-static void Wail32_Check1() {
-
-    Debug_Info("Wail_Check Begin");
-}
-
-
-//_________________________
-static void Wail32_Check2() {
-
-    Debug_Info("Wail_Check End");
-}
-
-
-//______________________________________________
-static void __declspec(naked) wail32_check(void) {
-
-    __asm {
-        pushad
-        call Wail32_Check1
-        popad
-        push esi
-        mov esi, 0x418E08
-        call esi
-        pop esi
-
-        pushad
-        call Wail32_Check2
-        popad
-        ret
-    }
-}
-
-
 //_____________________________________________________________
 static void __declspec(naked) alt_x_window_sample_suspend(void) {
 
@@ -1913,16 +1879,6 @@ void Modifications_Display() {
         //in void ERROR_EXIT_MESSAGE_BOX(const char* msg) //should be all right
     //0046B5F2 | .FF53 08       CALL DWORD PTR DS : [EBX + 8] ; IDirectDrawSurface4_Release(p)
     //0046B616 | .FF53 08       CALL DWORD PTR DS : [EBX + 8] ; IDirectDrawSurface4_Release(p)
-
-
-    //0041C0D8 | .E8 2BCDFFFF      CALL 00418E08; [DARK.00418E08
-    FuncReplace32(0x41C0D9, 0xFFFFCD2B, (DWORD)&wail32_check);
-    //0041D0E5 | .E8 1EBDFFFF      CALL 00418E08; [DARK.00418E08
-    FuncReplace32(0x41D0E6, 0xFFFFBD1E, (DWORD)&wail32_check);
-    //00469514 | .E8 EFF8FAFF      CALL 00418E08; [DARK.00418E08
-    FuncReplace32(0x469515, 0xFFFAF8EF, (DWORD)&wail32_check);
-
-
 
     //---pause sample handler while ALT-X window is opened to prevent harsh static sounds---
     MemWrite16(0x41D89D, 0x45C7, 0x9090);
