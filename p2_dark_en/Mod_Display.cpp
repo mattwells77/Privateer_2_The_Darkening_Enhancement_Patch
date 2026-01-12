@@ -226,6 +226,10 @@ static BOOL Window_Setup(HWND hwnd) {
             Check_Window_GUI_Scaling_Limits(hwnd, &winPlace.rcNormalPosition, false);
         
         SetWindowPlacement(hwnd, &winPlace);
+
+        //disable close button for now.
+        HMENU SysMenu = GetSystemMenu(hwnd, FALSE);
+        RemoveMenu(SysMenu, SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
     }
     else {
         Debug_Info("Window Setup: Fullscreen");
