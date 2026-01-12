@@ -1688,6 +1688,43 @@ static void __declspec(naked) wail32_check(void) {
 }
 
 
+//_____________________________________________________________
+static void __declspec(naked) alt_x_window_sample_suspend(void) {
+
+    __asm {
+        //pause sample_handler while alt-x window is opened.
+        mov eax, pp_p2_wail32_sample_handle
+        cmp dword ptr ds:[eax], 0
+        je exit_func
+        call p2_wail32_sample_suspend
+
+        exit_func:
+        //restore original code
+        mov dword ptr ds:[EBP - 0x18], 0
+        ret
+    }
+}
+
+
+//____________________________________________________________
+static void __declspec(naked) alt_x_window_sample_resume(void) {
+
+    __asm {
+        //resume sample_handler after alt-x window is closed.
+        mov eax, pp_p2_wail32_sample_handle
+        cmp dword ptr ds : [eax] , 0
+        je exit_func
+        call p2_wail32_sample_resume
+
+        exit_func:
+        //restore original code
+        movsx eax, dword ptr ds : [EBP - 0x18]
+        cmp eax, 2
+        ret
+    }
+}
+
+
 //___________________________
 void Modifications_Display() {
 
@@ -1884,4 +1921,16 @@ void Modifications_Display() {
     FuncReplace32(0x41D0E6, 0xFFFFBD1E, (DWORD)&wail32_check);
     //00469514 | .E8 EFF8FAFF      CALL 00418E08; [DARK.00418E08
     FuncReplace32(0x469515, 0xFFFAF8EF, (DWORD)&wail32_check);
+
+
+
+    //---pause sample handler while ALT-X window is opened to prevent harsh static sounds---
+    MemWrite16(0x41D89D, 0x45C7, 0x9090);
+    //MemWrite8(0x41D89F, 0xE8, 0xE8);
+    FuncWrite32(0x41D8A0, 0x00, (DWORD)&alt_x_window_sample_suspend);
+
+    MemWrite8(0x41D934, 0x0F, 0xE8);
+    FuncWrite32(0x41D935, 0x83E845BF, (DWORD)&alt_x_window_sample_resume);
+    MemWrite16(0x41D939, 0x02F8, 0x9090);
+    //--------------------------------------------------------------------------------------
 }
