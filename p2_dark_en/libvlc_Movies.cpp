@@ -142,6 +142,7 @@ static BOOL Set_Movie_Settings() {
 
 //_______________________________________________________________
 BOOL Get_Movie_Path(const char* tgv_path, std::string* p_retPath) {
+    Set_Movie_Settings();
 
     if (!p_retPath)
         return FALSE;
