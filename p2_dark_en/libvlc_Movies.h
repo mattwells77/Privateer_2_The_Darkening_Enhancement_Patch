@@ -272,3 +272,5 @@ private:
 
 
 extern LibVlc_Movie* pMovie_vlc;
+
+BOOL Get_Movie_Path(const char* tgv_path, std::string* p_retPath);

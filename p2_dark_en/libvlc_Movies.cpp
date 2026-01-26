@@ -28,7 +28,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 std::string movie_dir;
 std::string movie_ext;
-//std::string movie_config_path;
+std::string movie_config_path;
 
 BOOL are_movie_path_setting_set = FALSE;
 int branch_offset_ms = 0;
@@ -39,7 +39,7 @@ LibVlc_Movie* pMovie_vlc = nullptr;
 std::string language_audio;
 std::string language_subs;
 BOOL subtitles_enabled = FALSE;
-/*
+
 //__________________________________________
 static bool isPathRelative(const char* path) {
 
@@ -67,7 +67,7 @@ static void Set_Movie_Config_Path() {
     movie_config_path.append(movie_dir);
     movie_config_path.append("movies.ini");
 }
-*/
+
 
 //______________________________
 static BOOL Set_Movie_Settings() {
@@ -113,8 +113,8 @@ static BOOL Set_Movie_Settings() {
         movie_dir.append("\\");
     Debug_Info_Movie("movie directory: %s", movie_dir.c_str());
 
-    //Set_Movie_Config_Path();
-    //Debug_Info_Movie("movie_config_path: %s", movie_config_path.c_str());
+    Set_Movie_Config_Path();
+    Debug_Info_Movie("movie_config_path: %s", movie_config_path.c_str());
 
     //get the hd movie extension.
     ConfigReadString(L"MOVIES", L"EXT", CONFIG_MOVIES_EXT, wchar_buff, MAX_PATH);
@@ -140,8 +140,8 @@ static BOOL Set_Movie_Settings() {
 }
 
 
-//______________________________________________________________________
-static BOOL Get_Movie_Path(const char* tgv_path, std::string* p_retPath) {
+//_______________________________________________________________
+BOOL Get_Movie_Path(const char* tgv_path, std::string* p_retPath) {
 
     if (!p_retPath)
         return FALSE;
@@ -164,6 +164,10 @@ static BOOL Get_Movie_Path(const char* tgv_path, std::string* p_retPath) {
             c++;
         }
 
+        if (GetPrivateProfileIntA(movie_name, "skip", FALSE, movie_config_path.c_str())) {
+            Debug_Info_Movie("Skipping Movie: %s", movie_name);
+            return -1;
+        }
         p_retPath->assign(movie_dir);
         p_retPath->append(movie_name);
         p_retPath->append(movie_ext);
@@ -271,7 +275,8 @@ LibVlc_Movie::LibVlc_Movie(const char* in_path) {
 
     Set_Movie_Settings();
 
-    Get_Movie_Path(in_path, &path);
+    //Get_Movie_Path(in_path, &path);
+    path.assign(in_path);
 
     isPlaying = false;
     hasPlayed = false;

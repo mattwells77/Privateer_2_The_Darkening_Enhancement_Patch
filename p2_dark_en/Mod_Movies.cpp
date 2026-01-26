@@ -273,20 +273,31 @@ static void __declspec(naked) movie_get_surface_dimensions(void) {
 static BOOL Play_Movie(const char* tgv_path, BOOL clear_on_start, BOOL fade_out) {
     
     Debug_Info_Movie("Play_Movie_Sequence: main_path: %s, fade_in: %d, fade_out: %d", tgv_path, clear_on_start, fade_out);
+
+    //make sure fade level is a back to full brightness for movie display. 
+    Fade(FALSE, TRUE);
+
+    //get the hd movie path, skip movie playback if this movie has been flagged in movies.ini
+    std::string hd_movie_path;
+    if (Get_Movie_Path(tgv_path, &hd_movie_path) == -1) {
+        if (clear_on_start)
+            surface_gui->Clear_Texture(0x00000000);
+        if (fade_out)
+            Fade(TRUE, TRUE);
+        return FALSE;
+    }
+
     p2_music_stop();
 
     if (pMovie_vlc)
         delete pMovie_vlc;
 
-    pMovie_vlc = new LibVlc_Movie(tgv_path);
+    pMovie_vlc = new LibVlc_Movie(hd_movie_path.c_str());
 
     BOOL exit_flag = FALSE;
     BOOL escape_flag = FALSE;
     BOOL play_successfull = FALSE;
     MOVIE_STATE movie_state{ 0 };
-
-    //make sure fade level is a back to full brightness for movie display. 
-    Fade(FALSE, TRUE);
 
     if (pMovie_vlc->Play()) {
         if (clear_on_start)
