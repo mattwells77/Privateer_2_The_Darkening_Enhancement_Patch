@@ -28,6 +28,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "Display_DX11.h"
 #include "libvlc_Movies.h"
 
+bool movie_mouse_double_click = FALSE;
 
 ///ddraw dummy structures, for the basic requirements here.-----------------------------------
 typedef struct _DUMMY_DDSURFACEDESC {
@@ -269,6 +270,21 @@ static void __declspec(naked) movie_get_surface_dimensions(void) {
 }
 
 
+//________________________________________________________________
+static void __declspec(naked) check_movie_mouse_double_click(void) {
+
+    __asm {
+        call p_p2_check_key_state
+        cmp al, 0
+        jne exit_func
+
+        mov al, movie_mouse_double_click
+        exit_func:
+        ret
+    }
+}
+
+
 //______________________________________________________________________________
 static BOOL Play_Movie(const char* tgv_path, BOOL clear_on_start, BOOL fade_out) {
     
@@ -294,6 +310,7 @@ static BOOL Play_Movie(const char* tgv_path, BOOL clear_on_start, BOOL fade_out)
 
     pMovie_vlc = new LibVlc_Movie(hd_movie_path.c_str());
 
+    movie_mouse_double_click = false;
     BOOL exit_flag = FALSE;
     BOOL escape_flag = FALSE;
     BOOL play_successfull = FALSE;
@@ -307,6 +324,10 @@ static BOOL Play_Movie(const char* tgv_path, BOOL clear_on_start, BOOL fade_out)
         while (!exit_flag) {
 
             escape_flag = p2_check_key_state(0x1, 0x8, 0x10);
+
+            if (movie_mouse_double_click)
+                escape_flag = TRUE;
+            
             if(escape_flag)
                 exit_flag = TRUE;
 
@@ -463,4 +484,6 @@ void Modifications_Movies() {
     //in 1 draw func
     MemWrite16(0x493590, 0x840F, 0xE990);
     //------------------------------------------------
+
+    FuncReplace32(0x4692A2, 0x0F22, (DWORD)&check_movie_mouse_double_click);
 }

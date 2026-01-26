@@ -31,3 +31,5 @@ void Check_Optional_Enhancements();
 //void Modifications_Joystick();
 
 void Fade(BOOL out, BOOL instant);
+
+extern bool movie_mouse_double_click;
