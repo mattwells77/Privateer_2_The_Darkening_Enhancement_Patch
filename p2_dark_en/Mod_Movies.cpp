@@ -285,11 +285,13 @@ static BOOL Play_Movie(const char* tgv_path, BOOL clear_on_start, BOOL fade_out)
     BOOL play_successfull = FALSE;
     MOVIE_STATE movie_state{ 0 };
 
+    //make sure fade level is a back to full brightness for movie display. 
+    Fade(FALSE, TRUE);
+
     if (pMovie_vlc->Play()) {
-        if (clear_on_start) {
+        if (clear_on_start)
             surface_gui->Clear_Texture(0x00000000);
-            Fade(FALSE, TRUE);
-        }
+        
         play_successfull = TRUE;
         while (!exit_flag) {
 

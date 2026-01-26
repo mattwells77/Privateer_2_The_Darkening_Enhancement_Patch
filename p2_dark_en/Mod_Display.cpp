@@ -1009,7 +1009,7 @@ void Fade(BOOL out, BOOL instant) {
         else
             val = 1.0f;
         Set_Brigtness_Level(val);
-        Display_Dx_Present();
+        //Display_Dx_Present();
         Debug_Info("Fade INSTANT");
         return;
     }
