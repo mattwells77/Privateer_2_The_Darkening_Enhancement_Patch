@@ -62,14 +62,57 @@ extern BYTE* p_p2_movie_flag_unk;
 
 extern WORD* p_p2_current_CD_loaded;
 
+extern IMAGE_BUFFER* p_p2_main_image_buffer;
+extern IMAGE_BUFFER_RECT* p_p2_main_image_buffer_rect;
+
+extern BYTE* p_p2_controller_flags;//0 = mouse, 1 = joy without throttle, 2 = joy with throttle, etc.
+
+extern BYTE* p2_keyboard_state_main;
+extern BYTE* p2_keyboard_state_last;
+
+
 extern void* p_p2_check_key_state;
 extern void* p_p2_space_main;
 extern void* p_p2_options_screen;
+extern void* p_p2_navigation_screen;
+extern void* p_p2_diary_screen;
+extern void* p_p2_hotkeys_screen;
+extern void* p_p2_email_screen;
+
+
+#define SPACE_OBJECT_STRUCT_SIZE  928 
+#define SPACE_PC_SHIP_STRUCT_FT_OFFSET  0x1298 
+#define SPACE_PC_SHIP_STRUCT_FX_OFFSET  0x12B0 
+#define SPACE_PC_SHIP_STRUCT_FY_OFFSET  0x12A8 
+#define SPACE_PC_SHIP_STRUCT_FR_OFFSET  0x12AC 
+#define SPACE_PC_SHIP_STRUCT_AFTERBURNER_OFFSET  0x12D0
+extern void* p_p2_space_struct;
+
+extern DWORD* p_p2_space_struct_number_of_objects;//I think this this is the number of objects in space_struct.
+
+
+extern float* p_p2_space_struct_joy_fx;
+extern float* p_p2_space_struct_joy_fy;
+extern float* p_p2_space_struct_joy_ft;
+
+extern float* p_p2_space_struct_joy_f_dead_zone;
+
+extern BYTE* p_p2_space_struct_joy_buttons;
+
+extern WORD* p_p2_space_struct_exit_flag;
+
+
+void p2_update_joystick_data(void* p_space_struct);
+void p2_proccess_joystick_data(void* p_space_struct);
+void p2_update_and_proccess_joystick_data();
+
+extern void* p_p2_update_joystick_data;
+extern void* p_p2_proccess_joystick_data;
 
 extern void** pp_p2_wail32_sample_handle;
 extern void** pp_p2_wail32_midi_sequence_handle;
 
-bool p2_check_key_state(DWORD scan_code, DWORD flag_1, DWORD flag_2);
+bool p2_check_key_state(BYTE scan_code, BYTE flag_1, BYTE flag_2);
 
 DWORD p2_music_start(DWORD flag_1, DWORD flag_2, DWORD flag_3);
 extern DWORD(*p2_music_stop)();
@@ -84,4 +127,6 @@ extern void(*p2_wail32_midi_sequence_resume)();
 
 extern void(*p2_movie_active)(LONG* p_active_flag);
 extern BOOL(*p2_movie_play)(const char* path, BOOL clear_on_start, BOOL fade_out);
+
+extern void(*p2_update_keyboard_state_ddinput)();
 

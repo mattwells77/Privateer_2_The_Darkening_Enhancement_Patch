@@ -42,6 +42,26 @@ LONG** pp_p2_movie_active_flag = nullptr;
 
 WORD* p_p2_current_CD_loaded = nullptr;
 
+IMAGE_BUFFER* p_p2_main_image_buffer = nullptr;
+IMAGE_BUFFER_RECT* p_p2_main_image_buffer_rect = nullptr;
+
+void* p_p2_space_struct = nullptr;
+
+DWORD* p_p2_space_struct_number_of_objects = nullptr;
+
+float* p_p2_space_struct_joy_fx = nullptr;
+float* p_p2_space_struct_joy_fy = nullptr;
+float* p_p2_space_struct_joy_ft = nullptr;
+
+float* p_p2_space_struct_joy_f_dead_zone = nullptr;
+
+BYTE* p_p2_space_struct_joy_buttons = nullptr;
+
+WORD* p_p2_space_struct_exit_flag = nullptr;
+
+void* p_p2_update_joystick_data = nullptr;
+void* p_p2_proccess_joystick_data = nullptr;
+
 
 void** pp_p2_wail32_sample_handle = nullptr;
 void** pp_p2_wail32_midi_sequence_handle = nullptr;
@@ -60,10 +80,24 @@ BOOL(*p2_movie_play)(const char* path, BOOL clear_on_start, BOOL fade_out) = nul
 void* p_p2_check_key_state = nullptr;
 void* p_p2_space_main = nullptr;
 void* p_p2_options_screen = nullptr;
+void* p_p2_navigation_screen = nullptr;
+void* p_p2_diary_screen = nullptr;
+void* p_p2_hotkeys_screen = nullptr;
+void* p_p2_email_screen = nullptr;
 
 void* p_p2_music_start = nullptr;
 
 DWORD(*p2_music_stop)() = nullptr;
+
+void(*p2_update_keyboard_state_ddinput)() =nullptr;
+
+BYTE* p2_keyboard_state_main = nullptr;
+BYTE* p2_keyboard_state_last = nullptr;
+
+BYTE* p_p2_controller_flags = nullptr;
+
+
+
 
 
 //____________________________________________________________
@@ -82,17 +116,47 @@ DWORD p2_music_start(DWORD flag_1, DWORD flag_2, DWORD flag_3) {
 }
 
 
-//__________________________________________________________________
-bool p2_check_key_state(DWORD scan_code, DWORD flag_1, DWORD flag_2) {
+//_______________________________________________________________
+bool p2_check_key_state(BYTE scan_code, BYTE flag_1, BYTE flag_2) {
 	bool ret_val = false;
 	__asm {
-		mov ebx, flag_2
-		mov edx, flag_1
-		mov eax, scan_code
+		mov bl, flag_2
+		mov dl, flag_1
+		mov al, scan_code
 		call p_p2_check_key_state
 		mov ret_val, al
 	}
 	return ret_val;
+}
+
+
+//________________________________________________
+void p2_update_joystick_data(void* p_space_struct) {
+	__asm {
+		mov eax, p_space_struct
+		call p_p2_update_joystick_data
+	}
+}
+
+
+//__________________________________________________
+void p2_proccess_joystick_data(void* p_space_struct) {
+	__asm {
+		mov eax, p_space_struct
+		call p_p2_proccess_joystick_data
+	}
+}
+
+
+//_________________________________________
+void p2_update_and_proccess_joystick_data() {
+	__asm {
+		mov eax, p_p2_space_struct
+		call p_p2_update_joystick_data
+
+		mov eax, p_p2_space_struct
+		call p_p2_proccess_joystick_data
+	}
 }
 
 
@@ -115,6 +179,9 @@ void DARK_Setup() {
 
 	p_p2_current_CD_loaded = (WORD*)0x52D314;
 
+	p_p2_main_image_buffer = (IMAGE_BUFFER*)0x4F1BFC;
+	p_p2_main_image_buffer_rect = (IMAGE_BUFFER_RECT*)0x4F1C60;
+
 	pp_p2_wail32_sample_handle = (void**)0x4F01B4;
 	pp_p2_wail32_midi_sequence_handle = (void**)0x4F01B8;
 
@@ -132,10 +199,35 @@ void DARK_Setup() {
 
 	p_p2_check_key_state = (void*)0x46A1C8;
 
+
+	p_p2_space_struct = (void*)0x4F7A98;
+	p_p2_space_struct_number_of_objects = (DWORD*)(0x4F7A98 + 0x2785C);
+	p_p2_space_struct_joy_fx = (float*)(0x4F7A98 + 0x27928);
+	p_p2_space_struct_joy_fy = (float*)(0x4F7A98 + 0x2792C);
+	p_p2_space_struct_joy_ft = (float*)(0x4F7A98 + 0x27970);
+	p_p2_space_struct_joy_f_dead_zone = (float*)(0x4F7A98 + 0x27930);
+	p_p2_space_struct_joy_buttons = (BYTE*)(0x4F7A98 + 0x27960);
+	p_p2_space_struct_exit_flag = (WORD*)(0x4F7A98 + 0x279AE);
+
+	p_p2_update_joystick_data = (void*)0x44B718;
+	p_p2_proccess_joystick_data = (void*)0x44B764;
+
+
 	p_p2_space_main = (void*)0x438137;
 
 	p_p2_options_screen = (void*)0x45CE5C;
+	p_p2_navigation_screen = (void*)0x45A7A0;
+	p_p2_diary_screen = (void*)0x45C454;
+	p_p2_hotkeys_screen = (void*)0x45F374;
+	p_p2_email_screen = (void*)0x45BE34;
 
 	p_p2_music_start = (void*)0x418E08;
 	p2_music_stop = (DWORD(*)())0x4194D4;
+
+	p2_update_keyboard_state_ddinput = (void(*)())0x46A0D8;
+
+	p2_keyboard_state_main = (BYTE*)0x55D3F0;
+	p2_keyboard_state_last = (BYTE*)0x55D4F0;
+
+	p_p2_controller_flags = (BYTE*)0x52E062;
 }

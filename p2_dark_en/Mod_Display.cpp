@@ -1,6 +1,6 @@
 /*
 The MIT License (MIT)
-Copyright © 2025 Matt Wells
+Copyright © 2025-2026 Matt Wells
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this
 software and associated documentation files (the “Software”), to deal in the
@@ -28,7 +28,8 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "configTools.h"
 #include "libvlc_Movies.h"
 #include "dark.h"
-//#include "joystick_config.h"
+#include "input.h"
+#include "input_config.h"
 
 #define WIN_MODE_STYLE  WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
 
@@ -46,9 +47,13 @@ LARGE_INTEGER Frequency = { 0LL };
 float f_cycle_Hz_GUI = 30.0f;
 float f_cycle_Hz_Space = 30.0f;
 
+HMODULE hinst_DARK = nullptr;
 
-//___________________________________
-static void Multimedia_Wait(float Hz) {
+BOOL is_nav_screen = FALSE;
+
+
+//____________________________
+void Multimedia_Wait(float Hz) {
   
     LARGE_INTEGER waitTime = { 0LL };
 
@@ -89,6 +94,7 @@ static BOOL IsMouseInClient() {
         return FALSE;
     return TRUE;
 }
+
 
 //___________________________
 static BOOL ClipMouseCursor() {
@@ -200,6 +206,8 @@ static bool Display_Exit() {
 //_________________________________
 static BOOL Window_Setup(HWND hwnd) {
 
+    hinst_DARK = GetModuleHandleW(nullptr);
+
     QueryPerformanceFrequency(&Frequency);
     
     if (ConfigReadInt_InGame(L"MAIN", L"WINDOWED", CONFIG_MAIN_WINDOWED))
@@ -251,6 +259,7 @@ static BOOL Window_Setup(HWND hwnd) {
     Debug_Info("Window Setup: Done");
 
     Check_Optional_Enhancements();
+    Keys_Load();
 
     f_cycle_Hz_GUI = (float)ConfigReadInt(L"MAIN", L"CYCLE_HZ_GUI", CONFIG_MAIN_CYCLE_HZ_GUI);
     f_cycle_Hz_Space = (float)ConfigReadInt(L"SPACE", L"CYCLE_HZ_SPACE", CONFIG_SPACE_CYCLE_HZ_SPACE);
@@ -300,6 +309,29 @@ static void __declspec(naked) setup_window(void) {
 
         ret
 
+    }
+}
+
+
+//_____________________________________
+void SetWindowActivation(BOOL isActive) {
+
+    //When game window loses focus, fullscreen mode needs to temporarily be put into windowed mode in order to appear on the taskbar and alt-tab display.
+    if (!is_windowed) {
+        if (isActive == FALSE) {//Convert to windowed mode when app loses focus.
+            SetWindowLongPtr(*p_p2_hWinMain, GWL_EXSTYLE, 0);
+            SetWindowLongPtr(*p_p2_hWinMain, GWL_STYLE, WIN_MODE_STYLE | WS_VISIBLE);
+            SetWindowPos(*p_p2_hWinMain, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+            ShowWindow(*p_p2_hWinMain, SW_RESTORE);
+            //Debug_Info("SetWindowActivation full to win");
+        }
+        else if (isActive) {//Return to fullscreen mode when app regains focus.
+            SetWindowLongPtr(*p_p2_hWinMain, GWL_EXSTYLE, WS_EX_TOPMOST);
+            SetWindowLongPtr(*p_p2_hWinMain, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+            SetWindowPos(*p_p2_hWinMain, HWND_TOPMOST, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+            ShowWindow(*p_p2_hWinMain, SW_MAXIMIZE);
+            //Debug_Info("SetWindowActivation win to full");
+        }
     }
 }
 
@@ -369,6 +401,69 @@ static void Toggle_WindowMode(HWND hwnd) {
 }
 
 
+//_______________________________
+void P2_Active_App(BOOL activate) {
+    if (activate == FALSE) {
+        Debug_Info("P2_Active_App Deactivate");
+        *p_p2_is_app_active = FALSE;
+
+        if (*p_p2_hThread_main != nullptr)
+            SuspendThread(*p_p2_hThread_main);
+
+        if (*pp_p2_wail32_sample_handle)
+            p2_wail32_sample_suspend();
+        if (*pp_p2_wail32_midi_sequence_handle)
+            p2_wail32_midi_sequence_suspend();
+
+        if (*p_p2_movie_flag_unk != 2)
+            return;
+
+        if (!*p_p2_is_app_movie_suspended)
+            return;
+        p2_movie_active(*pp_p2_movie_active_flag);
+        *p_p2_is_app_movie_suspended = TRUE;
+
+        if (is_cursor_clipped) {
+            ClipCursor(nullptr);
+            is_cursor_clipped = false;
+            //Debug_Info("WM_ACTIVATEAPP false, Mouse Cursor Un-Clipped");
+        }
+
+        if (pMovie_vlc)
+            pMovie_vlc->Pause(true);
+    }
+    else {
+        Debug_Info("P2_Active_App Activate");
+        *p_p2_is_app_active = TRUE;
+
+        if (*pp_p2_wail32_sample_handle)
+            p2_wail32_sample_resume();
+        if (*pp_p2_wail32_midi_sequence_handle)
+            p2_wail32_midi_sequence_resume();
+
+        if (*p_p2_hThread_main != nullptr)
+            ResumeThread(*p_p2_hThread_main);
+
+        if (*p_p2_is_app_movie_suspended) {
+            if (*pp_p2_movie_active_flag) {
+                p2_movie_active(*pp_p2_movie_active_flag);
+
+                *p_p2_is_app_movie_suspended = FALSE;
+            }
+        }
+        if (*p_p2_cursor)
+            SetCursor(*p_p2_cursor);
+        if (is_cursor_clipped) {
+            if (ClipMouseCursor()) {
+                //Debug_Info("WM_ACTIVATEAPP Mouse Cursor Clipped");
+            }
+        }
+        if (pMovie_vlc)
+            pMovie_vlc->Pause(false);
+    }
+}
+
+
 //______________________________________________________________________________________
 static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
@@ -377,6 +472,22 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
     switch (uMsg)
     {
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONUP:
+        Mouse.Update_Buttons(wParam);
+        return 0;
+    case WM_MOUSEWHEEL:
+        Mouse.Update_Wheel_Vertical(wParam);
+        return 0;
+    case WM_MOUSEHWHEEL:
+        Mouse.Update_Wheel_Horizontal(wParam);
+        return 0;
     case WM_LBUTTONDBLCLK:
     case WM_RBUTTONDBLCLK: {
         movie_mouse_double_click = true;
@@ -385,17 +496,181 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
     case WM_ERASEBKGND:
         return 1;
     case WM_KEYDOWN:
-        if (!(lParam & 0x40000000)) { //The previous key state. The value is 1 if the key is down before the message is sent, or it is zero if the key is up.
-            if (wParam == VK_F11) { //Use F11 key to toggle windowed mode.
-                if (pMovie_vlc)
-                    pMovie_vlc->Pause(true);
-
-                Toggle_WindowMode(hwnd);
-                return 0;
+        if (!(lParam & 0x40000000)) { //the previous key state.
+            //BYTE scan_code = (BYTE)((lParam & 0x00FF0000) >> 16);
+            //Debug_Info("WM_KEYDOWN scan:%X vk:%X", scan_code, wParam);
+            p2_keyboard_state_main[wParam] |= 0x80;
+            //avoid issues when the Shift key is down changing the output of number lock keys. Mark both potential key outputs if one is set.
+            switch (wParam) {
+            case VK_DECIMAL:
+                p2_keyboard_state_main[VK_DELETE] |= 0x80;
+                break;
+            case VK_DELETE:
+                p2_keyboard_state_main[VK_DECIMAL] |= 0x80;
+                break;
+            case VK_NUMPAD0:
+                p2_keyboard_state_main[VK_INSERT] |= 0x80;
+                break;
+            case VK_INSERT:
+                p2_keyboard_state_main[VK_NUMPAD0] |= 0x80;
+                break;
+            case VK_NUMPAD1:
+                p2_keyboard_state_main[VK_END] |= 0x80;
+                break;
+            case VK_END:
+                p2_keyboard_state_main[VK_NUMPAD1] |= 0x80;
+                break;
+            case VK_NUMPAD2:
+                p2_keyboard_state_main[VK_DOWN] |= 0x80;
+                break;
+            case VK_DOWN:
+                p2_keyboard_state_main[VK_NUMPAD2] |= 0x80;
+                break;
+            case VK_NUMPAD3:
+                p2_keyboard_state_main[VK_NEXT] |= 0x80;
+                break;
+            case VK_NEXT:
+                p2_keyboard_state_main[VK_NUMPAD3] |= 0x80;
+                break;
+            case VK_NUMPAD4:
+                p2_keyboard_state_main[VK_LEFT] |= 0x80;
+                break;
+            case VK_LEFT:
+                p2_keyboard_state_main[VK_NUMPAD4] |= 0x80;
+                break;
+            case VK_NUMPAD6:
+                p2_keyboard_state_main[VK_RIGHT] |= 0x80;
+                break;
+            case VK_RIGHT:
+                p2_keyboard_state_main[VK_NUMPAD6] |= 0x80;
+                break;
+            case VK_NUMPAD7:
+                p2_keyboard_state_main[VK_HOME] |= 0x80;
+                break;
+            case VK_HOME:
+                p2_keyboard_state_main[VK_NUMPAD7] |= 0x80;
+                break;
+            case VK_NUMPAD8:
+                p2_keyboard_state_main[VK_UP] |= 0x80;
+                break;
+            case VK_UP:
+                p2_keyboard_state_main[VK_NUMPAD8] |= 0x80;
+                break;
+            case VK_NUMPAD9:
+                p2_keyboard_state_main[VK_PRIOR] |= 0x80;
+                break;
+            case VK_PRIOR:
+                p2_keyboard_state_main[VK_NUMPAD9] |= 0x80;
+                break;
+            default:
+                break;
             }
-
+            return 0;
         }
         break;
+    case WM_KEYUP: {
+        //BYTE scan_code = (BYTE)((lParam & 0x00FF0000) >> 16);
+        //Debug_Info("WM_KEYU scan:%X vk:%X", scan_code, wParam);
+        p2_keyboard_state_main[wParam] = 0x0;
+        //avoid issues when the Shift key is down changing the output of number lock keys. Mark both potential key outputs if one is set.
+        switch (wParam) {
+        case VK_DECIMAL:
+            p2_keyboard_state_main[VK_DELETE] = 0x0;
+            break;
+        case VK_DELETE:
+            p2_keyboard_state_main[VK_DECIMAL] = 0x0;
+            break;
+        case VK_NUMPAD0:
+            p2_keyboard_state_main[VK_INSERT] = 0x0;
+            break;
+        case VK_INSERT:
+            p2_keyboard_state_main[VK_NUMPAD0] = 0x0;
+            break;
+        case VK_NUMPAD1:
+            p2_keyboard_state_main[VK_END] = 0x0;
+            break;
+        case VK_END:
+            p2_keyboard_state_main[VK_NUMPAD1] = 0x0;
+            break;
+        case VK_NUMPAD2:
+            p2_keyboard_state_main[VK_DOWN] = 0x0;
+            break;
+        case VK_DOWN:
+            p2_keyboard_state_main[VK_NUMPAD2] = 0x0;
+            break;
+        case VK_NUMPAD3:
+            p2_keyboard_state_main[VK_NEXT] = 0x0;
+            break;
+        case VK_NEXT:
+            p2_keyboard_state_main[VK_NUMPAD3] = 0x0;
+            break;
+        case VK_NUMPAD4:
+            p2_keyboard_state_main[VK_LEFT] = 0x0;
+            break;
+        case VK_LEFT:
+            p2_keyboard_state_main[VK_NUMPAD4] = 0x0;
+            break;
+        case VK_NUMPAD6:
+            p2_keyboard_state_main[VK_RIGHT] = 0x0;
+            break;
+        case VK_RIGHT:
+            p2_keyboard_state_main[VK_NUMPAD6] = 0x0;
+            break;
+        case VK_NUMPAD7:
+            p2_keyboard_state_main[VK_HOME] = 0x0;
+            break;
+        case VK_HOME:
+            p2_keyboard_state_main[VK_NUMPAD7] = 0x0;
+            break;
+        case VK_NUMPAD8:
+            p2_keyboard_state_main[VK_UP] = 0x0;
+            break;
+        case VK_UP:
+            p2_keyboard_state_main[VK_NUMPAD8] = 0x0;
+            break;
+        case VK_NUMPAD9:
+            p2_keyboard_state_main[VK_PRIOR] = 0x0;
+            break;
+        case VK_PRIOR:
+            p2_keyboard_state_main[VK_NUMPAD9] = 0x0;
+            break;
+        default:
+            break;
+        }
+        return 0;
+    }
+    case WM_SYSKEYDOWN: 
+        if (!(lParam & 0x40000000)) { //the previous key state.
+            //BYTE scan_code = (BYTE)((lParam & 0x00FF0000) >> 16);
+            //Debug_Info("WM_SYSKEYDOWN scan:%X vk:%X", scan_code, wParam);
+            p2_keyboard_state_main[wParam] |= 0x80;
+
+            if ((lParam & (1 << 29)) != 0) { //if ALT key is down.
+
+                if (wParam == VK_RETURN) {
+                    if (pMovie_vlc)
+                        pMovie_vlc->Pause(true);
+
+                    Toggle_WindowMode(hwnd);
+                    return 0;
+                }
+                if (wParam == 'J') {
+                    JoyConfig_Main();
+                    return 0;
+                }
+            }
+            return 0;
+        }
+        break;
+    case WM_SYSKEYUP: {
+        //BYTE scan_code = (BYTE)((lParam & 0x00FF0000) >> 16);
+        //Debug_Info("WM_SYSKEYUP scan:%X vk:%X", scan_code, wParam);
+        p2_keyboard_state_main[wParam] = 0x0;
+        //if ((lParam & (1 << 29)) != 0) { //if ALT key is down.
+        //    return 0;
+        //}
+        return 0;
+    }
     case WM_KILLFOCUS:
         Debug_Info("WM_KILLFOCUS");
         return 0;
@@ -403,13 +678,9 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         Debug_Info("WM_INITMENU");
         return 0;
     case WM_MENUCHAR:
-
         Debug_Info("WM_MENUCHAR %X", MNC_CLOSE<<16);
         return MNC_CLOSE << 16;
-        
-    case WM_SYSKEYDOWN:
-    case WM_SYSKEYUP:
-        return 1;
+
     //case WM_MOUSEMOVE:
     case WM_SYSCOMMAND:
         switch ((wParam & 0xFFF0)) {
@@ -447,8 +718,8 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             is_cursor_clipped = false;
             //Debug_Info("WM_SETCURSOR Mouse Cursor Un-Clipped");
         }
-        //if (hWin_JoyConfig)
-        //    break;//dont alter the cursor visibility when joy config window open.
+        if (hWin_Config_Control)
+            break;//dont alter the cursor visibility when joy config window open.
         WORD ht = LOWORD(lParam);
         if (HTCLIENT == ht) {
 
@@ -541,7 +812,7 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
     case WM_ACTIVATE:
         break;
     case WM_ACTIVATEAPP:
-        //Set_WindowActive_State(wParam);
+        SetWindowActivation(wParam);
         if (wParam == FALSE) {
             Debug_Info("WM_ACTIVATEAPP false");
             *p_p2_is_app_active = FALSE;
@@ -1257,236 +1528,14 @@ static void __declspec(naked) fade_out_buffer(void) {
 }
 
 
-//__________________________________________________
-static void Get_Mouse_Position(LONG* p_x, LONG* p_y) {
-
-    LONG x = 0;
-    LONG y = 0;
-
-    POINT p{ 0,0 };
-    if (ClientToScreen(*p_p2_hWinMain, &p)) {
-        POINT m{ 0,0 };
-        GetCursorPos(&m);
-
-        x = (m.x - p.x);
-        y = (m.y - p.y);
-
-        if (surface_gui) {
-            float fx = 0;
-            float fy = 0;
-            surface_gui->GetPosition(&fx, &fy);
-            x = (LONG)((x - fx) * GUI_WIDTH / surface_gui->GetScaledWidth());
-            y = (LONG)((y - fy) * GUI_HEIGHT / surface_gui->GetScaledHeight());
-        }
-        else {
-            x = x * GUI_WIDTH / clientWidth;
-            y = y * GUI_HEIGHT / clientHeight;
-        }
-    }
-
-    if (x < 0)
-        x = 0;
-    else if (x >= GUI_WIDTH)
-        x = GUI_WIDTH - 1;
-    if (y < 0)
-        y = 0;
-    else if (y >= GUI_HEIGHT)
-        y = GUI_HEIGHT - 1;
-
-    *p_x = x;
-    *p_y = y;
-    //Debug_Info("Get_Mouse_Pos x:%d, y:%d", *p_x, *p_y);
-}
-
-
-//_______________________________________________
-static void __declspec(naked) get_mouse_pos(void) {
-
-    __asm {
-        push ebx
-        push ecx
-        push esi
-        push edi
-
-        push edx
-        push eax
-        call Get_Mouse_Position
-        add esp, 0x8
-
-        pop edi
-        pop esi
-        pop ecx
-        pop ebx
-
-        ret
-    }
-}
-
-
-//__________________________________________________________________
-static void Get_Mouse_Buttons(WORD* p_butt_left, WORD* p_butt_right) {
-
-    *p_butt_left = GetAsyncKeyState(VK_LBUTTON);
-    *p_butt_right = GetAsyncKeyState(VK_RBUTTON);
-}
-
-
-//___________________________________________________
-static void __declspec(naked) get_mouse_buttons(void) {
-
-    __asm {
-        push ebx
-        push ecx
-        push esi
-        push edi
-
-        push edx
-        push eax
-        call Get_Mouse_Buttons
-        add esp, 0x8
-
-        pop edi
-        pop esi
-        pop ecx
-        pop ebx
-
-        ret
-    }
-}
-
-
-//______________________________________________________________________
-static void Get_Mouse_Buttons_GUI(WORD* p_butt_left, WORD* p_butt_right) {
-    
-    static WORD butt_left_last = 0;
-    static WORD butt_right_last = 0;
-
-
-    *p_butt_left = GetAsyncKeyState(VK_LBUTTON);
-    *p_butt_right = GetAsyncKeyState(VK_RBUTTON);
-
-    if (*p_butt_left) {
-        if (butt_left_last)
-            *p_butt_left = 0;
-        else
-            butt_left_last = 1;
-    }
-    else
-        butt_left_last = 0;
-
-    if (*p_butt_right) {
-        if (butt_right_last)
-            *p_butt_right = 0;
-        else
-            butt_right_last = 1;
-    }
-    else
-        butt_right_last = 0;
-}
-
-
-//_______________________________________________________
-static void __declspec(naked) get_mouse_buttons_gui(void) {
-
-    __asm {
-        push ebx
-        push ecx
-        push esi
-        push edi
-        push ebp
-
-        push edx
-        push eax
-        call Get_Mouse_Buttons_GUI
-        add esp, 0x8
-
-        pop ebp
-        pop edi
-        pop esi
-        pop ecx
-        pop ebx
-
-        ret
-    }
-}
-
-
-//____________________________________________
-static void Set_Mouse_Position(LONG x, LONG y) {
-
-    POINT client{ 0,0 };
-    if (ClientToScreen(*p_p2_hWinMain, &client)) {
-
-        float fx = 0;
-        float fy = 0;
-        float fwidth = (float)clientWidth;
-        float fheight = (float)clientHeight;
-        if (surface_gui) {
-            surface_gui->GetPosition(&fx, &fy);
-            fwidth = surface_gui->GetScaledWidth();
-            fheight = surface_gui->GetScaledHeight();
-        }
-
-        fx += x * fwidth / GUI_WIDTH;
-        LONG ix = (LONG)fx;
-        if ((float)ix != fx)
-            ix++;
-        ix += client.x;
-
-        fy += y * fheight / GUI_HEIGHT;
-        LONG iy = (LONG)fy;
-        if ((float)iy != fy)
-            iy++;
-        iy += client.y;
-
-        SetCursorPos(ix, iy);
-    }
-
-    if (x < 0)
-        x = 0;
-    else if (x >= GUI_WIDTH)
-        x = GUI_WIDTH - 1;
-    if (y < 0)
-        y = 0;
-    else if (y >= GUI_HEIGHT)
-        y = GUI_HEIGHT - 1;
-
-}
-
-
-//_______________________________________________
-static void __declspec(naked) set_mouse_pos(void) {
-
-    __asm {
-        push ebx
-        push ecx
-        push esi
-        push edi
-        push ebp
-
-        push edx
-        push eax
-        call Set_Mouse_Position
-        add esp, 0x8
-
-        pop ebp
-        pop edi
-        pop esi
-        pop ecx
-        pop ebx
-
-        ret
-    }
-}
-
-
+/*
 //main space draw display vars
 BYTE* p_space_buff = nullptr;
 LONG space_pitch = 0;
 LONG space_right = 0;
 LONG space_bottom = 0;
 
-
+int space_count = 0;
 //________________________________
 static void Main_Space_Draw_Lock() {
 
@@ -1499,6 +1548,7 @@ static void Main_Space_Draw_Lock() {
     }
     space_right = (LONG)surface_space2D->GetWidth() - 1;
     space_bottom = (LONG)surface_space2D->GetHeight() - 1;
+    space_count = 0;
 }
 
 
@@ -1518,7 +1568,8 @@ static void __declspec(naked) main_space_surface_lock(void) {
 
 //______________________________________________________________________________________________________________________________________
 static void Draw_Image_Buffer_Rect_Space(IMAGE_BUFFER_RECT* from_img_buff, LONG sub_left, LONG sub_top, LONG sub_right, LONG sub_bottom) {
-    
+    //Debug_Info_Movie("Draw_Image_Buffer_Rect_Space: %X, %d, %d, %d, %d, %d", from_img_buff->img_buff->buff, space_count, sub_left, sub_top, sub_right- sub_left, sub_bottom - sub_top);
+    space_count++;
     if (!p_space_buff)
         return;
 
@@ -1563,6 +1614,9 @@ static void Main_Space_Surface_Unlock_Display() {
 
     surface_space2D->Unlock();
 
+    while (wait_joy_config)
+        Sleep(0);
+
     Multimedia_Wait(f_cycle_Hz_Space);
     Display_Dx_Present(PRESENT_TYPE::space);
 }
@@ -1589,6 +1643,57 @@ static void __declspec(naked) main_space_surface_unlock_display(void) {
         ret
     }
 }
+*/
+
+
+
+//_____________________________________________
+static void Draw_Image_Buffer_Rect_Space_Main() {
+
+    if (!surface_space2D)
+        return;
+
+    BYTE* p_space_buff = nullptr;
+    LONG space_pitch = 0;
+
+    if (surface_space2D->Lock((VOID**)&p_space_buff, &space_pitch) != S_OK)
+        return;
+
+    LONG space_right = (LONG)surface_space2D->GetWidth() - 1;
+    LONG space_bottom = (LONG)surface_space2D->GetHeight() - 1;
+
+    LONG sub_left = 0;
+    LONG sub_top = 0;
+    DWORD sub_width = 640;
+    DWORD sub_height = 480;
+
+    IMAGE_BUFFER* img_buff = p_p2_main_image_buffer;
+    DWORD from_width = img_buff->right - img_buff->left + 1;
+    //DWORD  from_height = img_buff->bottom - img_buff->top + 1;
+
+    BYTE* from_buff = img_buff->buff;
+    BYTE* to_buff = p_space_buff;
+
+    from_buff += sub_top * from_width + sub_left;
+    to_buff += sub_top * space_pitch + sub_left;
+    for (DWORD y = 0; y < sub_height; y++) {
+        for (DWORD x = 0; x < sub_width; x++)
+            to_buff[x] = from_buff[x];
+
+        to_buff += space_pitch;
+        from_buff += from_width;
+    }
+
+    surface_space2D->Unlock();
+
+    if (current_pro_type != PROFILE_TYPE::GUI || is_nav_screen)
+        memset(img_buff->buff, 0, 640 * 480);
+
+    while (wait_joy_config)
+        Sleep(0);
+    Multimedia_Wait(f_cycle_Hz_Space);
+    Display_Dx_Present(PRESENT_TYPE::space);
+}
 
 
 //_________________________________________________________________
@@ -1614,12 +1719,49 @@ static void __declspec(naked) cursor_unclip_conversation_choice(void) {
 
 
 //_______________________________________________________
+static void Change_Profile_Type(PROFILE_TYPE new_profile) {
+
+    static PROFILE_TYPE last_profile_type = current_pro_type;
+
+    current_pro_type = new_profile;
+
+    //clear keyboard on profile change incase button is down during transition.
+    if (last_profile_type != current_pro_type) {
+        //if (last_profile_type == PROFILE_TYPE::GUI || current_pro_type == PROFILE_TYPE::GUI) {
+            memset(p2_keyboard_state_main, 0, 256);
+            last_profile_type = current_pro_type;
+        //}
+    }
+
+
+}
+
+
+//_______________________________________________________
 static void __declspec(naked) cursor_clipper_space(void) {
 
     __asm {
+
+        pushad
+        call Reset_Key_Throttle //reset key controlled throttle value to max when entering space.
+        push PROFILE_SPACE
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+
+        //mov current_pro_type, PROFILE_SPACE
         mov clip_cursor, TRUE
         call p_p2_space_main
         mov clip_cursor, FALSE
+        //mov current_pro_type, PROFILE_GUI
+
+        pushad
+        push PROFILE_GUI
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+
+
         ret
     }
 }
@@ -1629,31 +1771,157 @@ static void __declspec(naked) cursor_clipper_space(void) {
 static void __declspec(naked) cursor_clipper_options_screen(void) {
 
     __asm {
+        pushad
+        push PROFILE_GUI
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+        //mov current_pro_type, PROFILE_GUI
         mov clip_cursor, FALSE
         call p_p2_options_screen
         mov clip_cursor, TRUE
+        //mov current_pro_type, PROFILE_SPACE
+        pushad
+        push PROFILE_SPACE
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+        ret
+    }
+}
+
+
+//__________________________________________________________________
+static void __declspec(naked) cursor_clipper_navigation_screen(void) {
+
+    __asm {
+        pushad
+        push PROFILE_GUI
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+        //mov current_pro_type, PROFILE_GUI
+        mov is_nav_screen, TRUE
+        mov clip_cursor, FALSE
+        call p_p2_navigation_screen
+        mov clip_cursor, TRUE
+        mov is_nav_screen, FALSE
+        //mov current_pro_type, PROFILE_SPACE
+        pushad
+        push PROFILE_SPACE
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+        ret
+    }
+}
+
+
+//_______________________________________________________________
+static void __declspec(naked) cursor_clipper_hotkeys_screen(void) {
+
+    __asm {
+        pushad
+        push PROFILE_GUI
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+        //mov current_pro_type, PROFILE_GUI
+        mov clip_cursor, FALSE
+        call p_p2_hotkeys_screen
+        mov clip_cursor, TRUE
+        //mov current_pro_type, PROFILE_SPACE
+        pushad
+        push PROFILE_SPACE
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+        ret
+    }
+}
+
+
+//_____________________________________________________________
+static void __declspec(naked) cursor_clipper_diary_screen(void) {
+
+    __asm {
+        pushad
+        push PROFILE_GUI
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+        //mov current_pro_type, PROFILE_GUI
+        mov clip_cursor, FALSE
+        call p_p2_diary_screen
+        mov clip_cursor, TRUE
+        //mov current_pro_type, PROFILE_SPACE
+        pushad
+        push PROFILE_SPACE
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+        ret
+    }
+}
+
+
+//_____________________________________________________________
+static void __declspec(naked) cursor_clipper_email_screen(void) {
+
+    __asm {
+        pushad
+        push PROFILE_GUI
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+        //mov current_pro_type, PROFILE_GUI
+        mov clip_cursor, FALSE
+        call p_p2_email_screen
+        mov clip_cursor, TRUE
+        //mov current_pro_type, PROFILE_SPACE
+        pushad
+        push PROFILE_SPACE
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
         ret
     }
 }
 
 
 //__________________________________________________________
-static void __declspec(naked) cursor_unclip_space_exit(void) {
+static void __declspec(naked) alt_x_window_space_start(void) {
 
     __asm {
+        mov eax, p_p2_space_struct_exit_flag
+        cmp word ptr ds : [eax] , 0
+        je exit_func
         mov clip_cursor, FALSE
-        cmp word ptr ds:[eax + 0x279AE], 0x0
+        //mov current_pro_type, PROFILE_GUI
+        pushad
+        push PROFILE_GUI
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
+        exit_func :
         ret
     }
 }
 
 
-//________________________________________________________
-static void __declspec(naked) cursor_clip_space_exit(void) {
+//_________________________________________________________
+static void __declspec(naked) alt_x_window_space_end(void) {
 
     __asm {
+        mov eax, p_p2_space_struct_exit_flag
+        mov word ptr ds : [eax] , 0
+        //mov current_pro_type, PROFILE_SPACE
         mov clip_cursor, TRUE
-        cmp dword ptr ds:[eax + 0x1154], 0x2
+        pushad
+        push PROFILE_SPACE
+        call Change_Profile_Type
+        add esp, 0x4
+        popad
         ret
     }
 }
@@ -1698,22 +1966,6 @@ static void __declspec(naked) alt_x_window_sample_resume(void) {
 
 //___________________________
 void Modifications_Display() {
-
-    //replace direct input mouse functions with winapi
-    MemWrite8(0x4189D0, 0x53, 0xE9);
-    FuncWrite32(0x4189D1, 0x83575651, (DWORD)&get_mouse_pos);
-
-    MemWrite8(0x418A34, 0x53, 0xE9);
-    FuncWrite32(0x418A35, 0x08EC8351, (DWORD)&get_mouse_buttons);
-
-    MemWrite8(0x418A50, 0x53, 0xE9);
-    FuncWrite32(0x418A51, 0x083575651, (DWORD)&get_mouse_buttons_gui);
-    MemWrite16(0x418A55, 0x08EC, 0x9090);
-
-    MemWrite8(0x4189C4, 0x0F, 0xE9);
-    FuncWrite32(0x4189C5, 0xE998D2BF, (DWORD)&set_mouse_pos);
-    MemWrite32(0x4189C9, 0x05199B, 0x90909090);
-
 
     //replace WinProc function
     MemWrite8(0x46A8E8, 0x53, 0xE9);
@@ -1771,6 +2023,7 @@ void Modifications_Display() {
     FuncReplace32(0x41B817, 0x04FAC1, (DWORD)&Draw_Image_Buffer_Rect_Movie_Text_Top);
     FuncReplace32(0x41B838, 0x04FAA0, (DWORD)&Draw_Image_Buffer_Rect_Movie_Text_Bottom);
  
+    /*
     // draw space rects 
     //lock space surface once for all rects
     MemWrite8(0x459F5F, 0xBE, 0xE8);
@@ -1780,7 +2033,10 @@ void Modifications_Display() {
     //unlock space surface once for all rects
     MemWrite8(0x45A01C, 0x5E, 0xE9);
     FuncWrite32(0x45A01D, 0xC35B595A, (DWORD)&main_space_surface_unlock_display);
-
+    */
+    //Replace main space draw function
+    MemWrite8(0x459F20, 0x53, 0xE9);
+    FuncWrite32(0x459F21, 0x57565251, (DWORD)&Draw_Image_Buffer_Rect_Space_Main);
 
     //called after a palette update
     MemWrite8(0x46B528, 0x6A, 0xE9);
@@ -1872,13 +2128,34 @@ void Modifications_Display() {
     FuncReplace32(0x440FEE, 0x01BE6A, (DWORD)&cursor_clipper_options_screen);
     FuncReplace32(0x442797, 0x01A6C1, (DWORD)&cursor_clipper_options_screen);
 
-    MemWrite16(0x4398FF, 0x8366, 0xE890);
-    FuncWrite32(0x439901, 0x0279AEB8, (DWORD)&cursor_unclip_space_exit);
-    MemWrite16(0x439905, 0x0000, 0x9090);
 
-    MemWrite16(0x43995C, 0xB883, 0xE890);
-    FuncWrite32(0x43995E, 0x00001154, (DWORD)&cursor_clip_space_exit);
-    MemWrite8(0x439962, 0x02, 0x90);
+    //0044211E | .E8 7D860100   CALL NAV(EAX * space_struct)
+    FuncReplace32(0x44211F, 0x01867D, (DWORD)&cursor_clipper_navigation_screen);
+    //disable set mouse pos to allow mouse to move freely in windowed mode.
+    MemWrite8(0x45B446, 0xE8, 0x90);
+    MemWrite32(0x45B447, 0xFFFBD579, 0x90909090);
+
+    //0043C14E | .E8 E1FC0100 | CALL EMAIL() ? ?
+    FuncReplace32(0x43C14F, 0x01FCE1, (DWORD)&cursor_clipper_email_screen);
+    //00442593 | .E8 BC9E0100   CALL DIARY() ? ?
+    FuncReplace32(0x442594, 0x019EBC, (DWORD)&cursor_clipper_diary_screen);
+    //00442726 | .E8 49CC0100   CALL ALT_H_MENU() ? ?
+    FuncReplace32(0x442727, 0x01CC49, (DWORD)&cursor_clipper_hotkeys_screen);
+
+
+    //put space alt x window in GUI mode while it is up.
+    MemWrite32(0x4398FF, 0xAEB88366, 0xE8909090);
+    FuncWrite32(0x439903, 0x00000279, (DWORD)&alt_x_window_space_start);
+
+    MemWrite32(0x439921, 0xAE80C766, 0xE8909090);
+    FuncWrite32(0x439925, 0x00000279, (DWORD)&alt_x_window_space_end);
+    MemWrite8(0x439929, 0x00, 0x90);
+
+    MemWrite32(0x439944, 0xAE80C766, 0xE8909090);
+    FuncWrite32(0x439948, 0x00000279, (DWORD)&alt_x_window_space_end);
+    MemWrite8(0x43994C, 0x00, 0x90);
+
+
     //-----------------------------------------------------------------------------
 
         //in void ERROR_EXIT_MESSAGE_BOX(const char* msg) //should be all right

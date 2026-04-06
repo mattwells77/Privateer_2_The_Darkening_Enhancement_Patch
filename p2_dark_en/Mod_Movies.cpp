@@ -26,6 +26,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "configTools.h"
 #include "dark.h"
 #include "Display_DX11.h"
+#include "input.h"
 #include "libvlc_Movies.h"
 
 bool movie_mouse_double_click = FALSE;
@@ -323,7 +324,7 @@ static BOOL Play_Movie(const char* tgv_path, BOOL clear_on_start, BOOL fade_out)
         play_successfull = TRUE;
         while (!exit_flag) {
 
-            escape_flag = p2_check_key_state(0x1, 0x8, 0x10);
+            escape_flag = Get_Key_State(VK_ESCAPE, 0x8, 0x10);
 
             if (movie_mouse_double_click)
                 escape_flag = TRUE;
@@ -341,7 +342,7 @@ static BOOL Play_Movie(const char* tgv_path, BOOL clear_on_start, BOOL fade_out)
 
                 exit_flag = TRUE;
             }
-            //improves p2_check_key_state key press detection.
+            //improves Get_Key_State key press detection.
             Sleep(50);
         }
         pMovie_vlc->Stop();

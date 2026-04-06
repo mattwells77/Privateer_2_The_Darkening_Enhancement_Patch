@@ -94,7 +94,7 @@ const wchar_t* GetAppDataPath() {
     static bool app_data_path_set = false;
 
     if (!app_data_path_set) {
-        //This setting is only valid in the wc3w_en.ini file located in the wc3 app folder.
+        //This setting is only valid in the p2_dark_en.ini file located in the privateer 2 app folder.
         wstring local_ini = GetAppPath();
         local_ini.append(L"\\");
         local_ini.append(VER_PRODUCTNAME_STR);
@@ -144,7 +144,7 @@ static void ConfigCreate() {
     
     ConfigWriteInt(L"MAIN", L"UAC_AWARE", CONFIG_MAIN_UAC_AWARE);
 
-    //ConfigWriteInt(L"MAIN", L"ENABLE_CONTROLLER_ENHANCEMENTS", CONFIG_MAIN_ENABLE_CONTROLLER_ENHANCEMENTS);
+    ConfigWriteInt(L"MAIN", L"ENABLE_CONTROLLER_ENHANCEMENTS", CONFIG_MAIN_ENABLE_CONTROLLER_ENHANCEMENTS);
 
     ConfigWriteInt(L"MAIN", L"ENABLE_LINEAR_UPSCALING_GUI", CONFIG_MAIN_ENABLE_LINEAR_UPSCALING_GUI);
     ConfigWriteInt(L"MAIN", L"ENABLE_LINEAR_UPSCALING_HUD", CONFIG_MAIN_ENABLE_LINEAR_UPSCALING_HUD);

@@ -28,8 +28,22 @@ void Modifications_No_CD();
 void Modifications_Run_Game_From_Any_DIR();
 void Modifications_Movies();
 void Check_Optional_Enhancements();
-//void Modifications_Joystick();
+void Modifications_Joystick();
+void Modifications_Controller_Enhancements();
+void Modifications_KeyBoard();
+void Modifications_Mouse();
+
+void SetWindowActivation(BOOL isActive);
+
+void P2_Active_App(BOOL activate);
+
 
 void Fade(BOOL out, BOOL instant);
 
+void Multimedia_Wait(float Hz);
+
 extern bool movie_mouse_double_click;
+
+extern HMODULE hinst_DARK;
+extern BOOL wait_joy_config;//Pause space while configuring controllers.
+extern LARGE_INTEGER Frequency;

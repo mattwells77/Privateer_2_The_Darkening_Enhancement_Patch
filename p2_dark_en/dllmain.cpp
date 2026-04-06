@@ -30,7 +30,9 @@ HINSTANCE phinstDLL;
 
 //______________________
 static void Initialize() {
-    //Modifications_Joystick();
+    Modifications_Joystick();
+    Modifications_Mouse();
+    Modifications_KeyBoard();
     Modifications_Display();
     Modifications_General();
     Modifications_Movies();

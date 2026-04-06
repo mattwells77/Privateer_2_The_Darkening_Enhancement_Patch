@@ -38,6 +38,9 @@ void Check_Optional_Enhancements() {
         Modifications_No_CD();
         Debug_Info("Optional_Enhancement: NO-CD mode ENABLED");
     }
+
+    if (ConfigReadInt(L"MAIN", L"ENABLE_CONTROLLER_ENHANCEMENTS", CONFIG_MAIN_ENABLE_CONTROLLER_ENHANCEMENTS))
+        Modifications_Controller_Enhancements();
 }
 
 
