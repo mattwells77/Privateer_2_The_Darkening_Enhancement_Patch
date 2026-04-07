@@ -10,10 +10,11 @@ HD Movie playback is achieved using [libvlc](https://www.videolan.org/vlc/libvlc
 - Support for better quality movies via [libvlc](https://www.videolan.org/vlc/libvlc.html "libVLC is the core engine and the interface to the multimedia framework on which VLC media player is based.") (no alternative movie packages exist at present). 
 - Windows UAC compliance when the game is installed under "Program Files (x86)".
 - Windowed mode, with window resizing options and mouse locking only when required in-game.
+- An in-game Controller Setup utility, press (Alt + J). For mapping game actions to Joystick\Controller axes and buttons as well as Mouse buttons and wheels.
 
 ## Intended future enhancements:
 - HD wide screen space.
-- Joystick\Controller axis button mapping.
+
 
 ## Acknowledgements:
 - Most of the sound issues were fixed by rerouting function calls within the Miles Sound System library "WAIL32.DLL" to a newer version "MSS32.DLL". Credit for the method used should go to [MildewMan1](https://github.com/MildewMan1 ""), Who used this in his [DeadlockFixes](https://github.com/MildewMan1/DeadlockFixes "") project.
@@ -30,6 +31,12 @@ HD Movie playback is achieved using [libvlc](https://www.videolan.org/vlc/libvlc
 
 #### GOG DOS version notes:
 - You must first upgrade to the Windows version to play. If installing [DOS to Windows Deluxe Edition Patch](https://originalthp.solsector.net/privateer2win95/ ""), you won't need to install the "Privateer 2 Enhancement patch by HCl" as his and my patches do similar things. You also shouldn't use the "LAUNCHER.EXE" that comes with the patch but instead run "DARK.EXE" to play the game.
+
+## Notes:
+
+#### Controller / Mouse remap functions:
+- Press "Alt + J" in game to evoke the "Controller Setup" utility. Here you can map game actions to your controller/joystick and mouse, as well as re-map most keyboard functions. One recent addition is the ability to map different functions when in menus and other 2D screen (GUI) or when flying in space. In the Controller and Mouse sections you will see several tabs labelled GUI, Space, Remap 1, Remap 2 etc. GUI and Space should hopefully be pretty self-explanatory. Among the Space button actions you will find some functions labelled "Remap 1 (Hold To Enable)", "Remap 2..." etc.  Pressing and holding a button defined with one of these will allow you to reuse many controller/mouse buttons for other purposes which you can define in the Remap tabs. The purpose here is to limit the need to use the keyboard if at all and potentially play the whole game with just a controller.
+
 
 ## Compiling:
 - To compile, this project requires the [VLC media player sdk vlc-3.0.21](https://download.videolan.org/pub/videolan/vlc/last/win32/) and the [libvlcpp C++ bindings](https://github.com/videolan/libvlcpp). I've set up relative paths for these, and they should be installed adjacent to the projects solution folder to avoid the need to modify any project settings.
