@@ -34,8 +34,15 @@ HD Movie playback is achieved using [libvlc](https://www.videolan.org/vlc/libvlc
 
 ## Notes:
 
+#### Input Setup Screen:
+- Press "Alt + J" in game to evoke the "Controller Setup" utility. Here you can map game actions to your controller/joystick and mouse, as well as re-map most keyboard functions. 
+
+#### GUI Keyboard Control:
+- The original game had very patchy keyboard support in the main GUI. In this patch the game can now be fully navigated with controller/keyboard. Use the arrow keys to change the cursor position, movement speed can be increase by holding down the "CTRL" key. The "SPACE" key is used in place of the mouse left-click (select) and the "TAB" key is use in place of the mouse right-click (cycle hotspots). In some instances the "RETURN" key is used eg. when selecting a highlighted item in the Load Game list(this is the original behaviour).
+The cursor movement speed key can be changed in the "Alt + J" config screen.
+
 #### Controller / Mouse remap functions:
-- Press "Alt + J" in game to evoke the "Controller Setup" utility. Here you can map game actions to your controller/joystick and mouse, as well as re-map most keyboard functions. One recent addition is the ability to map different functions when in menus and other 2D screen (GUI) or when flying in space. In the Controller and Mouse sections you will see several tabs labelled GUI, Space, Remap 1, Remap 2 etc. GUI and Space should hopefully be pretty self-explanatory. Among the Space button actions you will find some functions labelled "Remap 1 (Hold To Enable)", "Remap 2..." etc.  Pressing and holding a button defined with one of these will allow you to reuse many controller/mouse buttons for other purposes which you can define in the Remap tabs. The purpose here is to limit the need to use the keyboard if at all and potentially play the whole game with just a controller.
+- Press "Alt + J" in game to evoke the "Controller Setup" utility. One recent addition is the ability to map different functions when in menus and other 2D screen (GUI) or when flying in space. In the Controller and Mouse sections you will see several tabs labelled GUI, Space, Remap 1, Remap 2 etc. GUI and Space should hopefully be pretty self-explanatory. Among the Space button actions you will find some functions labelled "Remap 1 (Hold To Enable)", "Remap 2..." etc.  Pressing and holding a button defined with one of these will allow you to reuse many controller/mouse buttons for other purposes which you can define in the Remap tabs. The purpose here is to limit the need to use the keyboard if at all and potentially play the whole game with just a controller.
 
 
 ## Compiling:
