@@ -1008,7 +1008,7 @@ void Modifications_KeyBoard() {
     //Load Selected
     MemWrite8(0x4225B1, 0x1C, VK_RETURN);
 
-    //???
+    //P.A.D. Load game confirmation.
     MemWrite8(0x435DB9, 0x1C, VK_RETURN);
 
     //Space exit game choice No

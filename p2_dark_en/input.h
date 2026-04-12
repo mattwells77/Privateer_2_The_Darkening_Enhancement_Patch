@@ -310,6 +310,7 @@ public:
 	};
 	bool SetButton(bool new_state);
 	P2_ACTIONS GetAction() const { return button[static_cast<int>(current_pro_type)]; };
+	PROFILE_TYPE GetActiveProfile() const { return active_profile; };
 protected:
 private:
 	P2_ACTIONS button[NUM_JOY_PROFILES];
@@ -372,7 +373,7 @@ public:
 	void Set_Axis_Reversed(BOOL is_rev_axis) { rev_axis[static_cast<int>(current_pro_type)] = is_rev_axis; };
 	void Set_Button_Action_Min(P2_ACTIONS in_action_min) { button_min.Set_Action(in_action_min); };
 	void Set_Button_Action_Max(P2_ACTIONS in_action_max) { button_max.Set_Action(in_action_max); };
-	void Set_State(double axis_val);
+	void Set_State(double axis_val, bool ignore_space_remap_profiles);
 	void Calibrate(BOOL state);
 	void Centre() {
 		if (calibrating)

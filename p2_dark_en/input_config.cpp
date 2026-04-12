@@ -118,17 +118,11 @@ P2_ACTIONS actions_gui_mouse[]{
 P2_ACTIONS actions_space[]{
 	P2_ACTIONS::None,
 
-	P2_ACTIONS::Joystick_Roll_Modifier,
 	P2_ACTIONS::Fire_Guns,
 	P2_ACTIONS::Fire_Missile,
 	P2_ACTIONS::Drop_Mine_Decoy,
-	P2_ACTIONS::Drop_Nuke_em,
-	P2_ACTIONS::Activate_BSE,
-	P2_ACTIONS::Warp_Shields,
-	P2_ACTIONS::Jump,
-	P2_ACTIONS::Toggle_SOS,
-	P2_ACTIONS::Toggle_Full_No_Guns,
 
+	P2_ACTIONS::Jump,
 	P2_ACTIONS::Speed_Increase,
 	P2_ACTIONS::Speed_Decrease,
 	P2_ACTIONS::Speed_Zero,
@@ -162,6 +156,12 @@ P2_ACTIONS actions_space[]{
 	P2_ACTIONS::Electronic_Diary,
 	P2_ACTIONS::Game_Options,
 	P2_ACTIONS::Hotkey_List,
+
+	P2_ACTIONS::Toggle_Full_No_Guns,
+	P2_ACTIONS::Toggle_SOS,
+	P2_ACTIONS::Drop_Nuke_em,
+	P2_ACTIONS::Activate_BSE,
+	P2_ACTIONS::Warp_Shields,
 
 	P2_ACTIONS::View_Front,
 	P2_ACTIONS::View_Left,
@@ -215,7 +215,7 @@ P2_ACTIONS actions_space[]{
 	P2_ACTIONS::Roll_Left,
 
 	P2_ACTIONS::Rotation_Speed_Key,
-
+	P2_ACTIONS::Joystick_Roll_Modifier,
 	P2_ACTIONS::Exit_Game,
 	//P2_ACTIONS::Space_Exit_No,
 	//P2_ACTIONS::Space_Exit_Yes,
@@ -234,19 +234,14 @@ P2_ACTIONS actions_space_mouse[]{
 
 	P2_ACTIONS::Fire_Missile,
 	P2_ACTIONS::Drop_Mine_Decoy,
-	P2_ACTIONS::Drop_Nuke_em,
-	P2_ACTIONS::Activate_BSE,
-	P2_ACTIONS::Warp_Shields,
+
 	P2_ACTIONS::Jump,
-	P2_ACTIONS::Toggle_SOS,
-	P2_ACTIONS::Toggle_Full_No_Guns,
 
 	P2_ACTIONS::Speed_Increase,
 	P2_ACTIONS::Speed_Decrease,
 	P2_ACTIONS::Speed_Zero,
 	P2_ACTIONS::Speed_Max,
 	P2_ACTIONS::Afterburner,
-
 
 	P2_ACTIONS::Target_Nearest_Hostile,
 	P2_ACTIONS::Target_Nearest_Friendly,
@@ -275,6 +270,12 @@ P2_ACTIONS actions_space_mouse[]{
 	P2_ACTIONS::Electronic_Diary,
 	P2_ACTIONS::Game_Options,
 	P2_ACTIONS::Hotkey_List,
+
+	P2_ACTIONS::Toggle_Full_No_Guns,
+	P2_ACTIONS::Toggle_SOS,
+	P2_ACTIONS::Drop_Nuke_em,
+	P2_ACTIONS::Activate_BSE,
+	P2_ACTIONS::Warp_Shields,
 
 	P2_ACTIONS::View_Front,
 	P2_ACTIONS::View_Left,

@@ -409,6 +409,7 @@ bool ACTION_KEY::SetButton(bool new_state) {
 	else if (new_state == false && pressed == true) {
 		Simulate_Key_Release(button[static_cast<int>(active_profile)]);
 		pressed = false;
+		active_profile = PROFILE_TYPE::End;
 	}
 
 	return pressed;
@@ -417,21 +418,28 @@ bool ACTION_KEY::SetButton(bool new_state) {
 
 //////////////////////////ACTION_AXIS/////////////////////////////////
 
-//__________________________________________
-void ACTION_AXIS::Set_State(double axis_val) {
+//____________________________________________________________________________
+void ACTION_AXIS::Set_State(double axis_val, bool ignore_space_remap_profiles) {
+
+	PROFILE_TYPE profile_type = current_pro_type;
+	//check the space remaps if set, when not deliberately checking the main space profile.
+	if (!ignore_space_remap_profiles) {
+		if (current_pro_type == PROFILE_TYPE::Space && current_pro_type_map != PROFILE_TYPE::Space)
+			profile_type = current_pro_type_map;
+	}
 
 	if (calibrating) {
 		if (axis_val < limits.min)
 			limits.min = axis_val;
 		if (axis_val > limits.max)
 			limits.max = axis_val;
-		if (rev_axis[static_cast<int>(current_pro_type)])
+		if (rev_axis[static_cast<int>(profile_type)])
 			axis_val = 1.0f - axis_val;
 
 		current_val = axis_val;
 		return;
 	}
-	if (rev_axis[static_cast<int>(current_pro_type)])
+	if (rev_axis[static_cast<int>(profile_type)])
 		axis_val = 1.0f - axis_val;
 
 	if (axis_val > limits.max)
@@ -439,10 +447,10 @@ void ACTION_AXIS::Set_State(double axis_val) {
 	else if (axis_val < limits.min)
 		current_val = limits.min;
 	current_val = (axis_val - limits.min) / limits.span;
-	
+
 	double half_val = current_val / 2;
 
-	if (is_centred[static_cast<int>(current_pro_type)]) {
+	if (is_centred[static_cast<int>(profile_type)]) {
 		if (axis_val > limits.centre_max)
 			current_centred_val = limits.centre_max;
 		else if (axis_val < limits.centre_min)
@@ -463,13 +471,30 @@ void ACTION_AXIS::Set_State(double axis_val) {
 
 	}
 
+	//check "axis as buttons" to ensure buttons are released if profile changes while pressed.
+	// no need to do this if "ignore_space_remap_profiles" is set, when checking space defaults.
+	if (!ignore_space_remap_profiles) {
+		PROFILE_TYPE button_profile_type = button_max.GetActiveProfile();
+		if (button_profile_type != profile_type && button_max.Is_Pressed()) {
+			if (assiged_to[static_cast<int>(button_profile_type)] == AXIS_TYPE::AsOneButton && (current_val < 0.1))
+				button_max.SetButton(false);
+			else if (assiged_to[static_cast<int>(button_profile_type)] == AXIS_TYPE::AsTwoButtons && (current_val <= 0.1))
+				button_max.SetButton(false);
+		}
+		button_profile_type = button_min.GetActiveProfile();
+		if (button_profile_type != profile_type && button_min.Is_Pressed()) {
+			if (assiged_to[static_cast<int>(button_profile_type)] == AXIS_TYPE::AsTwoButtons && (current_val >= -0.1))
+				button_min.SetButton(false);
+		}
+	}
+
 	bool new_state = false;
 
-	switch (assiged_to[static_cast<int>(current_pro_type)]) {
-	case AXIS_TYPE::Pointer_X:// check if axis is assigned to Yaw.
+	switch (assiged_to[static_cast<int>(profile_type)]) {
+	case AXIS_TYPE::Pointer_X:// check if axis is assigned to Pointer X GUI.
 		p2_joy_axes.x += current_centred_val;
 		break;
-	case AXIS_TYPE::Pointer_Y:// check if axis is assigned to Pitch
+	case AXIS_TYPE::Pointer_Y:// check if axis is assigned to Pointer Y GUI.
 		p2_joy_axes.y += current_centred_val;
 		break;
 	case AXIS_TYPE::Yaw:// check if axis is assigned to Yaw.
@@ -503,16 +528,16 @@ void ACTION_AXIS::Set_State(double axis_val) {
 		button_min.SetButton(new_state);
 		break;
 
-	case AXIS_TYPE::Pointer_Left:// check if axis is assigned to Yaw left.
+	case AXIS_TYPE::Pointer_Left:// check if axis is assigned to Pointer left GUI.
 		p2_joy_axes.x -= half_val;
 		break;
-	case AXIS_TYPE::Pointer_Right:// check if axis is assigned to Yaw right.
+	case AXIS_TYPE::Pointer_Right:// check if axis is assigned to Pointer right GUI.
 		p2_joy_axes.x += half_val;
 		break;
-	case AXIS_TYPE::Pointer_Up:// check if axis is assigned to Pitch up.
+	case AXIS_TYPE::Pointer_Up:// check if axis is assigned to Pointer up GUI.
 		p2_joy_axes.y += half_val;
 		break;
-	case AXIS_TYPE::Pointer_Down:// check if axis is assigned to Pitch down.
+	case AXIS_TYPE::Pointer_Down:// check if axis is assigned to Pointer down GUI.
 		p2_joy_axes.y -= half_val;
 		break;
 	case AXIS_TYPE::Yaw_Left:// check if axis is assigned to Yaw left.
@@ -534,6 +559,10 @@ void ACTION_AXIS::Set_State(double axis_val) {
 		p2_joy_axes.r += half_val;
 		break;
 	default:
+		//if axis has not been assigned, check main space profile assignment.
+		//this is done so that yaw, pitch, roll and throttle axes set in the main space profile continue to function in remaps. 
+		if (current_pro_type == PROFILE_TYPE::Space && current_pro_type != profile_type)
+			Set_State(axis_val, true);
 		break;
 	}
 }
@@ -646,7 +675,7 @@ void JOYSTICK::Update() {
 
 
 	for (int i = 0; i < num_axes; i++)
-		action_axis[i].Set_State(axisArray[i]);
+		action_axis[i].Set_State(axisArray[i], false);
 }
 
 
