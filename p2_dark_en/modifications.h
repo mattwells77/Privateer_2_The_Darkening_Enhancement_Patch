@@ -40,8 +40,6 @@ void P2_Active_App(BOOL activate);
 
 void Fade(BOOL out, BOOL instant);
 
-void Multimedia_Wait(float Hz);
-
 extern bool movie_mouse_double_click;
 
 extern HMODULE hinst_DARK;

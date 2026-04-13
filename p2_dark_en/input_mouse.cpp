@@ -61,14 +61,14 @@ bool ACTION_KEY_MOUSE::SetButton(bool new_state) {
 
 
 //________________________________________
-void ACTION_KEY_MOUSE::SetButton_Instant() const {
+void ACTION_KEY_MOUSE::SetButton_Instant(LONG duration_ms) const {
 
 	PROFILE_TYPE profile_type = current_pro_type;
 	if (current_pro_type == PROFILE_TYPE::Space && current_pro_type_map != PROFILE_TYPE::Space)
 		profile_type = current_pro_type_map;
 
 
-		Simulate_Key_Pressed(button[static_cast<int>(profile_type)]);
+		Simulate_Key_Pressed(button[static_cast<int>(profile_type)], duration_ms);
 };
 
 
@@ -216,21 +216,18 @@ void MOUSE::Update_Wheel_Vertical(WPARAM wParam) {
 	Setup();
 
 	short zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+	Debug_Info_Joy("Update_Wheel_Vertical: %d", zDelta);
 
-	if (zDelta > 0) {
-		while (zDelta > 0) {
-			action_key_wheel_v[0].SetButton_Instant();
-			zDelta -= 4;
-			Multimedia_Wait(1000);
-		}
-	}
-	else if (zDelta < 0) {
-		while (zDelta < 0) {
-			action_key_wheel_v[1].SetButton_Instant();
-			zDelta += 4;
-			Multimedia_Wait(1000);
-		}
-	}
+	float fzDelta = (float)zDelta / 120 * 60;
+
+	if (zDelta > 0)
+		action_key_wheel_v[0].SetButton_Instant((LONG)fzDelta);
+
+
+	else if (zDelta < 0)
+		action_key_wheel_v[1].SetButton_Instant(-(LONG)fzDelta);
+
+
 }
 
 
@@ -240,21 +237,15 @@ void MOUSE::Update_Wheel_Horizontal(WPARAM wParam) {
 	Setup();
 
 	short zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+	Debug_Info_Joy("Update_Wheel_Horizontal: %d", zDelta);
 
-	if (zDelta > 0) {
-		while (zDelta > 0) {
-			action_key_wheel_h[0].SetButton_Instant();
-			zDelta -= 4;
-			Multimedia_Wait(1000);
-		}
-	}
-	else if (zDelta < 0) {
-		while (zDelta < 0) {
-			action_key_wheel_h[1].SetButton_Instant();
-			zDelta += 4;
-			Multimedia_Wait(1000);
-		}
-	}
+	float fzDelta = (float)zDelta / 120 * 60;
+
+	if (zDelta > 0)
+		action_key_wheel_h[0].SetButton_Instant((LONG)fzDelta);
+	else if (zDelta < 0)
+		action_key_wheel_h[1].SetButton_Instant(-(LONG)fzDelta);
+
 }
 
 

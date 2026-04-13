@@ -283,7 +283,7 @@ public:
 		button[static_cast<int>(current_pro_type)] = in_action;
 	};
 	bool SetButton(bool new_state);
-	void SetButton_Instant() const;
+	void SetButton_Instant(LONG duration_ms) const;
 	P2_ACTIONS GetAction() const { return button[static_cast<int>(current_pro_type)]; };
 protected:
 private:
@@ -694,7 +694,7 @@ bool Get_Joystick_Config_Path(std::wstring* p_ret_string);
 
 void Simulate_Key_Press(P2_ACTIONS action);
 void Simulate_Key_Release(P2_ACTIONS action);
-void Simulate_Key_Pressed(P2_ACTIONS action);
+void Simulate_Key_Pressed(P2_ACTIONS action, LONG duration_ms);
 void Check_Simulated_Key_For_Release();
 void Update_Axis_Keys();
 void Reset_Key_Throttle();

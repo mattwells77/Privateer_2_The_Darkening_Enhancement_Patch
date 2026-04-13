@@ -54,7 +54,12 @@ int ReMap_1_list_pos = 0;
 int ReMap_2_list_pos = 0;
 int ReMap_3_list_pos = 0;
 
-queue<P2_ACTIONS> simulated_keys;
+struct SIMULATED_KEY_ACTION {
+	P2_ACTIONS action;
+	LARGE_INTEGER endTime;
+};
+
+vector<SIMULATED_KEY_ACTION> simulated_keys;
 
 
 //__________________________________________________
@@ -265,22 +270,49 @@ void Simulate_Key_Release(P2_ACTIONS action) {
 //____________________________________
 void Check_Simulated_Key_For_Release() {
 
-	while (!simulated_keys.empty()) {
-		P2_ACTIONS action = simulated_keys.front();
-		Simulate_Key_Release(action);
-		simulated_keys.pop();
+	if (simulated_keys.empty())
+		return;
+
+	static LARGE_INTEGER time = { 0 };
+	QueryPerformanceCounter(&time);
+
+	for (size_t i = 0; i < simulated_keys.size(); i++) {
+		if (simulated_keys[i].endTime.QuadPart < time.QuadPart) {
+			if (simulated_keys[i].action != P2_ACTIONS::None)
+				Simulate_Key_Release(simulated_keys[i].action);
+			simulated_keys[i].action = P2_ACTIONS::None;
+		}
 	}
+
+	while (!simulated_keys.empty() && simulated_keys.back().action == P2_ACTIONS::None)
+		simulated_keys.pop_back();
 }
 
 
-//__________________________________________
-void Simulate_Key_Pressed(P2_ACTIONS action) {
+//____________________________________________________________
+void Simulate_Key_Pressed(P2_ACTIONS action, LONG duration_ms) {
 
 	if (JoyConfig_Refresh_CurrentAction(action, TRUE) && JoyConfig_Refresh_CurrentAction_Mouse(action, TRUE))
 		return;
 
+
+	LONGLONG duration = (LONGLONG)duration_ms * 1000LL * Frequency.QuadPart / 1000000LL;
+
+	//check if key already pressed and extend the time held if so.
+	for (size_t i = 0; i < simulated_keys.size(); i++) {
+		if (simulated_keys[i].action == action) {
+			simulated_keys[i].endTime.QuadPart += duration;
+			return;
+		}
+	}
+
 	Simulate_Key_Press(action);
-	simulated_keys.push(action);
+	SIMULATED_KEY_ACTION key{};
+	key.action = action;
+
+	QueryPerformanceCounter(&key.endTime);
+	key.endTime.QuadPart += duration;
+	simulated_keys.push_back(key);
 }
 
 
@@ -289,6 +321,7 @@ void Reset_Key_Throttle() {
 
 	key_throttle = 1.0f;
 }
+
 
 //_____________________
 void Update_Axis_Keys() {
@@ -354,6 +387,9 @@ void Update_Axis_Keys() {
 
 		if (Get_Key_State(p_speed_max[0], p_speed_max[1], p_speed_max[2]))
 			key_throttle = 1.0f;
+
+		if (*p_p2_controller_flags == 0)// if mouse control, zero joy throttle addition to allow for mouse/key throttle.
+			p2_joy_axes.t = 0;
 
 		if (p2_joy_axes.t == 0)
 			p2_joy_axes.t += key_throttle;

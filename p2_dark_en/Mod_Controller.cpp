@@ -128,7 +128,7 @@ static void Joy_GetCurrentState(BYTE* space_struct) {
 	//else
 	//	Original_Joystick_Update();
 	
-	*p_p2_space_struct_joy_ft = (float)p2_joy_axes.t;
+	//*p_p2_space_struct_joy_ft = (float)p2_joy_axes.t;
 
 	void* p_pc_ship_struct = (void*)(space_struct + (*p_p2_space_struct_number_of_objects * SPACE_OBJECT_STRUCT_SIZE));
 
@@ -149,6 +149,27 @@ static void __declspec(naked) joy_get_current_state(void) {
 		push eax
 		call Joy_GetCurrentState
 		add esp, 0x4
+
+		pop ebp
+		ret
+	}
+}
+
+
+//___________________________________
+static void GetCurrentThrottleState() {
+
+	*p_p2_space_struct_joy_ft = (float)p2_joy_axes.t;
+}
+
+
+//____________________________________________________________
+static void __declspec(naked) get_current_throttle_state(void) {
+
+	__asm {
+		push ebp
+
+		call GetCurrentThrottleState
 
 		pop ebp
 		ret
@@ -232,9 +253,11 @@ void Modifications_Joystick() {
 	// Replace the original joy data update fuction.
 	FuncReplace32(0x44FE0E, 0xFFFFB906, (DWORD)&joy_get_current_state);
 
-	// Disable the original joy data proccessing function. This is done in "joy_get_current_state"
-	MemWrite8(0x44FE14, 0xE8, 0x90);
-	MemWrite32(0x44FE15, 0xFFFFB94B, 0x90909090);
+	// Get the throttle state whether controllers enabled or not to allow throttle +- mouse and keyboard input.
+	//jump to "get_current_throttle_state" if controllers disabled.
+	MemWrite8(0x44FE0A, 0x0E, 0x07); //JNE SHORT 0044FE12
+	// Replace the original joy data proccessing function.
+	FuncReplace32(0x44FE15, 0xFFFFB94B, (DWORD)&get_current_throttle_state);
 
 	//jump over zeroing x,y and r axes.
 	MemWrite16(0x44FE19, 0x958B, 0x64EB);//JMP SHORT 0044FE7F
