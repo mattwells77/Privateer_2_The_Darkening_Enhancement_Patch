@@ -52,8 +52,8 @@ HMODULE hinst_DARK = nullptr;
 BOOL is_nav_screen = FALSE;
 
 
-//____________________________
-void Multimedia_Wait(float Hz) {
+//___________________________________
+static void Multimedia_Wait(float Hz) {
   
     LARGE_INTEGER waitTime = { 0LL };
 
@@ -565,9 +565,8 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             default:
                 break;
             }
-            return 0;
         }
-        break;
+        return 0;
     case WM_KEYUP: {
         //BYTE scan_code = (BYTE)((lParam & 0x00FF0000) >> 16);
         //Debug_Info("WM_KEYU scan:%X vk:%X", scan_code, wParam);
@@ -654,14 +653,13 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
                     Toggle_WindowMode(hwnd);
                     return 0;
                 }
-                if (wParam == 'J') {
+                else if (wParam == 'J') {
                     JoyConfig_Main();
                     return 0;
                 }
             }
-            return 0;
         }
-        break;
+        return 0;
     case WM_SYSKEYUP: {
         //BYTE scan_code = (BYTE)((lParam & 0x00FF0000) >> 16);
         //Debug_Info("WM_SYSKEYUP scan:%X vk:%X", scan_code, wParam);

@@ -219,6 +219,36 @@ static void __declspec(naked) options_screen_skip_joy_button_checks(void) {
 }
 
 
+//___________________________________
+static BOOL Check_Update_Input_Time() {
+
+	static LONGLONG duration_HZ = Frequency.QuadPart / 60LL;
+	static LONGLONG last_time = 0;
+	LONGLONG elapsed_ticks = 0;
+	LARGE_INTEGER time = { 0 };
+
+	QueryPerformanceCounter(&time);
+
+	elapsed_ticks = time.QuadPart - last_time;
+	if (elapsed_ticks < 0 || elapsed_ticks > duration_HZ) {
+		last_time = time.QuadPart;
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+//_________________________________________________________
+static void __declspec(naked) check_update_input_time(void) {
+
+	__asm {
+		call Check_Update_Input_Time
+		test eax, eax
+		ret
+	}
+}
+
+
 //__________________________________________
 void Modifications_Controller_Enhancements() {
 
@@ -246,6 +276,14 @@ void Modifications_Controller_Enhancements() {
 
 //___________________________
 void Modifications_Joystick() {
+
+	// Replaced Sleep(20) function delay with a timer check, when updating controller/keyboard and exit game flag checking.
+	// This was bottlenecking the message loop, causing lag when processing mouse and keyboard messages.
+	MemWrite8(0x46B0C7, 0x6A, 0xE8);
+	FuncWrite32(0x46B0C8, 0x15FF2E14, (DWORD)&check_update_input_time);
+	MemWrite16(0x46B0CC, 0x022C, 0xC085);//TEST EAX, EAX
+	MemWrite16(0x46B0CE, 0x0057, 0xAC74);//JE SHORT 0046B07C
+
 
 	// Update controller state when updating keyboard state for GUI interactions.
 	FuncReplace32(0x46B0D1, 0xFFFFF003, (DWORD)&joy_update_main);
