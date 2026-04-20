@@ -34,8 +34,66 @@ WORD* p_mouse_button_space = &mouse_state_space[0];
 WORD* p_mouse_x_space = &mouse_state_space[1];
 WORD* p_mouse_y_space = &mouse_state_space[2];
 
+bool mouse_double_click_left = false;
+//bool mouse_double_click_right = false;
 
 MOUSE Mouse;
+
+
+//_____________________________
+void Check_Mouse_Double_Click() {
+
+	static LONGLONG doubleclick_time = (LONGLONG)GetDoubleClickTime() * Frequency.QuadPart / 1000LL;//ms to ticks
+	static LONG doubleclick_width = GetSystemMetrics(SM_CXDOUBLECLK);
+	static LONG doubleclick_height = GetSystemMetrics(SM_CYDOUBLECLK);
+
+	static bool left_click_was_down = 0;
+	static LARGE_INTEGER left_click_time = { 0 };
+	static LONG left_click_left_x = 0;
+	static LONG left_click_left_y = 0;
+
+	BYTE click_state = p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Left_Click)][0]] >> 7;
+	if (current_pro_type == PROFILE_TYPE::GUI)
+		click_state |= p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Left_Click_Key_GUI)][0]] >> 7;
+
+	if (click_state) {
+
+		left_click_was_down = true;
+
+		if (left_click_time.QuadPart > 0) {
+			LARGE_INTEGER time = { 0 };
+			QueryPerformanceCounter(&time);
+			if (time.QuadPart <= left_click_time.QuadPart) {
+				LONG x = 0;
+				LONG y = 0;
+				Get_Mouse_Position(&x, &y);
+
+				if (abs(x - left_click_left_x) > doubleclick_width || abs(y - left_click_left_y) > doubleclick_height)
+					left_click_time.QuadPart = 0;
+				else
+					mouse_double_click_left = true;
+			}
+			else
+				left_click_time.QuadPart = 0;
+		}
+	}
+	else {
+		if (left_click_time.QuadPart > 0) {
+			LARGE_INTEGER time = { 0 };
+			QueryPerformanceCounter(&time);
+			if (time.QuadPart > left_click_time.QuadPart)
+				left_click_time.QuadPart = 0;
+		}
+		else if (left_click_was_down) {
+			QueryPerformanceCounter(&left_click_time);
+			left_click_time.QuadPart += doubleclick_time;
+			Get_Mouse_Position(&left_click_left_x, &left_click_left_y);
+		}
+		mouse_double_click_left = false;
+		left_click_was_down = false;
+	}
+
+}
 
 
 //////////////////////////ACTION_KEY_MOUSE//////////////////////

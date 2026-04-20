@@ -480,6 +480,8 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
     case WM_MBUTTONUP:
     case WM_XBUTTONDOWN:
     case WM_XBUTTONUP:
+    case WM_LBUTTONDBLCLK:
+    case WM_RBUTTONDBLCLK:
         Mouse.Update_Buttons(wParam);
         return 0;
     case WM_MOUSEWHEEL:
@@ -488,11 +490,11 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
     case WM_MOUSEHWHEEL:
         Mouse.Update_Wheel_Horizontal(wParam);
         return 0;
-    case WM_LBUTTONDBLCLK:
-    case WM_RBUTTONDBLCLK: {
-        movie_mouse_double_click = true;
-        return 0;
-    }
+    //case WM_LBUTTONDBLCLK:
+    //case WM_RBUTTONDBLCLK: {
+    //    movie_mouse_double_click = true;
+    //    return 0;
+    //}
     case WM_ERASEBKGND:
         return 1;
     case WM_KEYDOWN:

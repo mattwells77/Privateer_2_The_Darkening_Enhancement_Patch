@@ -295,8 +295,7 @@ void Simulate_Key_Pressed(P2_ACTIONS action, LONG duration_ms) {
 	if (JoyConfig_Refresh_CurrentAction(action, TRUE) && JoyConfig_Refresh_CurrentAction_Mouse(action, TRUE))
 		return;
 
-
-	LONGLONG duration = (LONGLONG)duration_ms * 1000LL * Frequency.QuadPart / 1000000LL;
+	LONGLONG duration = (LONGLONG)duration_ms * Frequency.QuadPart / 1000LL;//ms to ticks
 
 	//check if key already pressed and extend the time held if so.
 	for (size_t i = 0; i < simulated_keys.size(); i++) {

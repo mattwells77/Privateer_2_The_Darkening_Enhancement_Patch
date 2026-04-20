@@ -40,7 +40,6 @@ void P2_Active_App(BOOL activate);
 
 void Fade(BOOL out, BOOL instant);
 
-extern bool movie_mouse_double_click;
 
 extern HMODULE hinst_DARK;
 extern BOOL wait_joy_config;//Pause space while configuring controllers.

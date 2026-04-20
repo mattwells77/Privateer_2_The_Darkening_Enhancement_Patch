@@ -29,8 +29,8 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "input.h"
 
 
-//__________________________________________________
-static void Get_Mouse_Position(LONG* p_x, LONG* p_y) {
+//___________________________________________
+void Get_Mouse_Position(LONG* p_x, LONG* p_y) {
     if (!*p_p2_is_app_active)
         return;
     LONG x = 0;
@@ -57,8 +57,8 @@ static void Get_Mouse_Position(LONG* p_x, LONG* p_y) {
                 surface_gui->GetScaledPixelDimensions(nullptr, &fscale_y);
 
                 float fmul = (float)(ElapsedMicroseconds.QuadPart) / 160000;
-                if (fmul < 0)
-                    fmul = 0;
+                if (fmul < 0.01f)//set a minimum threshold, in order to still allow for movement in high frequency sampling situations eg. conversation choice.
+                    fmul = 0.01f;
                 else if (fmul > 0.5f)
                     fmul = 0.5f;
 
@@ -288,6 +288,21 @@ static void __declspec(naked) set_mouse_pos(void) {
 }
 
 
+//_______________________________________________________
+static void __declspec(naked) check_pad_doubleclick(void) {
+
+    __asm {
+        cmp mouse_double_click_left, 0
+        je endfunc
+
+        mov word ptr ds : [eax + 0xEDA], 1//set clicked true
+        mov word ptr ds : [eax + 0xEDC], 1//set double clicked true
+        endfunc:
+        ret
+    }
+}
+
+
 //________________________
 void Modifications_Mouse() {
 
@@ -306,4 +321,9 @@ void Modifications_Mouse() {
     FuncWrite32(0x4189C5, 0xE998D2BF, (DWORD)&set_mouse_pos);
     MemWrite32(0x4189C9, 0x05199B, 0x90909090);
 
+    //fix doubleclick on map location in P.A.D.
+    MemWrite16(0x436B9D, 0x0C75, 0x9090);
+    MemWrite8(0x436BA2, 0x66, 0x90);
+    MemWrite16(0x436BA3, 0x80FF, 0xE890);
+    FuncWrite32(0x436BA5, 0x0EDE, (DWORD)&check_pad_doubleclick);
 }

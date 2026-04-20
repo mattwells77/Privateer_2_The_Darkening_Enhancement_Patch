@@ -705,6 +705,13 @@ bool Get_Key_State(BYTE key, BYTE mod_key_flags, BYTE run_once);
 BOOL Keys_Save();
 BOOL Keys_Load();
 
+//mouse
+void Get_Mouse_Position(LONG* p_x, LONG* p_y);
+//check double click for mouse, controller and keyboard.
+void Check_Mouse_Double_Click();
+
 extern MOUSE Mouse;
 extern WORD mouse_state_space[3];
 extern bool controller_enhancements_enabled;
+
+extern bool mouse_double_click_left;

@@ -93,6 +93,7 @@ static void Original_Joystick_Update() {
 }
 
 
+
 //______________________
 static void Joy_Update() {
 	Check_Simulated_Key_For_Release();
@@ -101,6 +102,8 @@ static void Joy_Update() {
 		Joysticks.Update();
 	else
 		Original_Joystick_Update();
+
+	Check_Mouse_Double_Click();
 }
 
 

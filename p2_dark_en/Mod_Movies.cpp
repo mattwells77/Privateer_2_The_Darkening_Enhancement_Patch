@@ -29,7 +29,6 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "input.h"
 #include "libvlc_Movies.h"
 
-bool movie_mouse_double_click = FALSE;
 
 ///ddraw dummy structures, for the basic requirements here.-----------------------------------
 typedef struct _DUMMY_DDSURFACEDESC {
@@ -279,7 +278,8 @@ static void __declspec(naked) check_movie_mouse_double_click(void) {
         cmp al, 0
         jne exit_func
 
-        mov al, movie_mouse_double_click
+        mov al, mouse_double_click_left
+
         exit_func:
         ret
     }
@@ -311,7 +311,6 @@ static BOOL Play_Movie(const char* tgv_path, BOOL clear_on_start, BOOL fade_out)
 
     pMovie_vlc = new LibVlc_Movie(hd_movie_path.c_str());
 
-    movie_mouse_double_click = false;
     BOOL exit_flag = FALSE;
     BOOL escape_flag = FALSE;
     BOOL play_successfull = FALSE;
@@ -326,9 +325,9 @@ static BOOL Play_Movie(const char* tgv_path, BOOL clear_on_start, BOOL fade_out)
 
             escape_flag = Get_Key_State(VK_ESCAPE, 0x8, 0x10);
 
-            if (movie_mouse_double_click)
+            if (mouse_double_click_left)
                 escape_flag = TRUE;
-            
+
             if(escape_flag)
                 exit_flag = TRUE;
 
