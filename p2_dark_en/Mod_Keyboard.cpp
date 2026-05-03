@@ -869,7 +869,7 @@ static void __declspec(naked) check_key_state_sc_to_vk(void) {
 }
 
 
-//__________________________
+//___________________________
 void Modifications_KeyBoard() {
 
     //Replace the function for checking the state of keys, for greater control.

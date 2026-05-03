@@ -461,20 +461,16 @@ public:
 		if (buttonArray)
 			delete[] buttonArray;
 		buttonArray = nullptr;
+		if (action_button)
+			delete[] action_button;
+		action_button = nullptr;
 
 		if (switchArray)
 			delete[] switchArray;
 		switchArray = nullptr;
-
-
-			if (action_button)
-				delete[] action_button;
-			action_button = nullptr;
-
-			if (action_switch)
-				delete[] action_switch;
-			action_switch = nullptr;
-		
+		if (action_switch)
+			delete[] action_switch;
+		action_switch = nullptr;
 	};
 	bool IsConnected() const { return connected; };
 	bool Connect(winrt::Windows::Gaming::Input::RawGameController const& in_rawGameController);

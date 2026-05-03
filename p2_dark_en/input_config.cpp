@@ -2331,7 +2331,7 @@ static INT_PTR CALLBACK DialogProc_JoyConfig(HWND hwndDlg, UINT uMsg, WPARAM wPa
 }
 
 
-//___________________________________________________________________________
+//__________________________________________________________________________
 BOOL JoyConfig_Refresh_CurrentAction_Mouse(P2_ACTIONS action, BOOL activate) {
 
 	if (!hWin_Config_Mouse)

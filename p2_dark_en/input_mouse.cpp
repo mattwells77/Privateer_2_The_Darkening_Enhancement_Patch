@@ -118,15 +118,14 @@ bool ACTION_KEY_MOUSE::SetButton(bool new_state) {
 };
 
 
-//________________________________________
+//________________________________________________________
 void ACTION_KEY_MOUSE::SetButton_Instant(LONG duration_ms) const {
 
 	PROFILE_TYPE profile_type = current_pro_type;
 	if (current_pro_type == PROFILE_TYPE::Space && current_pro_type_map != PROFILE_TYPE::Space)
 		profile_type = current_pro_type_map;
 
-
-		Simulate_Key_Pressed(button[static_cast<int>(profile_type)], duration_ms);
+	Simulate_Key_Pressed(button[static_cast<int>(profile_type)], duration_ms);
 };
 
 
@@ -264,7 +263,6 @@ void MOUSE::Update_Button(int button, bool state) {
 		return;
 
 	action_key_button[button].SetButton(state);
-
 }
 
 
@@ -280,12 +278,8 @@ void MOUSE::Update_Wheel_Vertical(WPARAM wParam) {
 
 	if (zDelta > 0)
 		action_key_wheel_v[0].SetButton_Instant((LONG)fzDelta);
-
-
 	else if (zDelta < 0)
 		action_key_wheel_v[1].SetButton_Instant(-(LONG)fzDelta);
-
-
 }
 
 
@@ -303,7 +297,6 @@ void MOUSE::Update_Wheel_Horizontal(WPARAM wParam) {
 		action_key_wheel_h[0].SetButton_Instant((LONG)fzDelta);
 	else if (zDelta < 0)
 		action_key_wheel_h[1].SetButton_Instant(-(LONG)fzDelta);
-
 }
 
 
