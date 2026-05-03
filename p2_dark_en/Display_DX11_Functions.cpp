@@ -49,7 +49,8 @@ using Microsoft::WRL::ComPtr;
 #include "shaders\compiled_h\PS_Brightness_Tex_32.h"
 #include "shaders\compiled_h\PS_Basic_Tex_8_scan_lines.h"
 
-
+//disable display while resizing.
+bool is_resizing = false;
 
 //Direct3D device and swap chain.
 ID3D11Device* g_d3dDevice = nullptr;
@@ -376,7 +377,8 @@ DrawSurface8_RT* Get_Space2D_Surface() {
 
 //________________________________________________
 void Display_Dx_Present(PRESENT_TYPE present_type) {
-
+    if (is_resizing)
+        return;
     if (!g_d3dDeviceContext)
         return;
 
@@ -1233,6 +1235,8 @@ BOOL Display_Dx_Resize(UINT width, UINT height) {
         return FALSE;
     }
 
+    is_resizing = true;
+
     g_d3dDeviceContext->OMSetRenderTargets(0, 0, 0);
     //Release all outstanding references to its back buffers.
     g_d3dRenderTargetView->Release();
@@ -1298,6 +1302,7 @@ BOOL Display_Dx_Resize(UINT width, UINT height) {
     Surfaces_Resize(width, height);
     RenderTargets_Destroy();
 
+    is_resizing = false;
     return TRUE;
 }
 
