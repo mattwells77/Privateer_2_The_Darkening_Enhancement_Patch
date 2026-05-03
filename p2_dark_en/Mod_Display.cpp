@@ -234,10 +234,6 @@ static BOOL Window_Setup(HWND hwnd) {
             Check_Window_GUI_Scaling_Limits(hwnd, &winPlace.rcNormalPosition, false);
         
         SetWindowPlacement(hwnd, &winPlace);
-
-        //disable close button for now.
-        HMENU SysMenu = GetSystemMenu(hwnd, FALSE);
-        RemoveMenu(SysMenu, SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
     }
     else {
         Debug_Info("Window Setup: Fullscreen");
@@ -1966,6 +1962,10 @@ static void __declspec(naked) alt_x_window_sample_resume(void) {
 
 //___________________________
 void Modifications_Display() {
+
+    //disable close[X] button when registering window class.
+    MemWrite32(0x46ABD2, CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS, CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS | CS_NOCLOSE);
+    MemWrite32(0x46AD5A, CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS, CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS | CS_NOCLOSE);
 
     //replace WinProc function
     MemWrite8(0x46A8E8, 0x53, 0xE9);
