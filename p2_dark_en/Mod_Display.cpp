@@ -49,7 +49,8 @@ float f_cycle_Hz_Space = 30.0f;
 
 HMODULE hinst_DARK = nullptr;
 
-BOOL is_nav_screen = FALSE;
+//flag: clear buffer after drawing in "Draw_Image_Buffer_Rect_Space_Main" function.
+BOOL clear_after_space_draw = FALSE;
 
 
 //___________________________________
@@ -1682,7 +1683,7 @@ static void Draw_Image_Buffer_Rect_Space_Main() {
 
     surface_space2D->Unlock();
 
-    if (current_pro_type != PROFILE_TYPE::GUI || is_nav_screen)
+    if (current_pro_type != PROFILE_TYPE::GUI || clear_after_space_draw)
         memset(img_buff->buff, 0, 640 * 480);
 
     while (wait_joy_config)
@@ -1691,6 +1692,18 @@ static void Draw_Image_Buffer_Rect_Space_Main() {
     Display_Dx_Present(PRESENT_TYPE::space);
 }
 
+
+
+//____________________________________________________________________
+static void __declspec(naked) clear_screen_options_joy_calibrate(void) {
+
+    __asm {
+        mov clear_after_space_draw, TRUE
+        call Draw_Image_Buffer_Rect_Space_Main
+        mov clear_after_space_draw, FALSE
+        ret
+    }
+}
 
 //_________________________________________________________________
 static void __declspec(naked) cursor_clip_conversation_choice(void) {
@@ -1797,11 +1810,11 @@ static void __declspec(naked) cursor_clipper_navigation_screen(void) {
         add esp, 0x4
         popad
         //mov current_pro_type, PROFILE_GUI
-        mov is_nav_screen, TRUE
+        mov clear_after_space_draw, TRUE
         mov clip_cursor, FALSE
         call p_p2_navigation_screen
         mov clip_cursor, TRUE
-        mov is_nav_screen, FALSE
+        mov clear_after_space_draw, FALSE
         //mov current_pro_type, PROFILE_SPACE
         pushad
         push PROFILE_SPACE
@@ -2129,7 +2142,6 @@ void Modifications_Display() {
     FuncReplace32(0x442797, 0x01A6C1, (DWORD)&cursor_clipper_options_screen);
 
 
-    //0044211E | .E8 7D860100   CALL NAV(EAX * space_struct)
     FuncReplace32(0x44211F, 0x01867D, (DWORD)&cursor_clipper_navigation_screen);
     //disable set mouse pos to allow mouse to move freely in windowed mode.
     MemWrite8(0x45B446, 0xE8, 0x90);
@@ -2147,6 +2159,10 @@ void Modifications_Display() {
     //00442726 | .E8 49CC0100   CALL ALT_H_MENU() ? ?
     FuncReplace32(0x442727, 0x01CC49, (DWORD)&cursor_clipper_hotkeys_screen);
 
+    //clear screen buffer after drawing on old joystick calibration screen.  
+    FuncReplace32(0x45E1B8, 0xFFFFBD64, (DWORD)&clear_screen_options_joy_calibrate);
+    //clear screen buffer after drawing on old joystick throttle calibration screen.
+    FuncReplace32(0x45E9D0, 0xFFFFB54C, (DWORD)&clear_screen_options_joy_calibrate);
 
     //put space alt x window in GUI mode while it is up.
     MemWrite32(0x4398FF, 0xAEB88366, 0xE8909090);
