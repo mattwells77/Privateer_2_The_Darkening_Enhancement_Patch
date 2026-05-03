@@ -222,6 +222,47 @@ static void __declspec(naked) options_screen_skip_joy_button_checks(void) {
 }
 
 
+//_______________________________
+static void Call_JoyConfig_Main() {
+	//The controller configuration utility needs to be run in the main thread. Evoke it by sending "ALT+J".
+	INPUT inputs[4] = {};
+	ZeroMemory(inputs, sizeof(inputs));
+
+	inputs[0].type = INPUT_KEYBOARD;
+	inputs[0].ki.wVk = VK_MENU;
+	inputs[0].ki.dwFlags = 0;
+
+	inputs[1].type = INPUT_KEYBOARD;
+	inputs[1].ki.wVk = 'J';
+	inputs[1].ki.dwFlags = 0;
+
+	inputs[2].type = INPUT_KEYBOARD;
+	inputs[2].ki.wVk = 'J';
+	inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
+
+	inputs[3].type = INPUT_KEYBOARD;
+	inputs[3].ki.wVk = VK_MENU;
+	inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
+
+	UINT uSent = SendInput(4, inputs, sizeof(INPUT));
+	if (uSent != 4)
+		Debug_Info_Error("Call_JoyConfig_Main - SendInput failed: 0x%x\n", HRESULT_FROM_WIN32(GetLastError()));
+}
+
+
+//_____________________________________________________________________
+static void __declspec(naked) options_screen_calibrate_controller(void) {
+
+	__asm {
+		pushad
+		call Call_JoyConfig_Main
+		popad
+		ret
+	}
+}
+
+
+
 //___________________________________
 static BOOL Check_Update_Input_Time() {
 
@@ -262,18 +303,33 @@ void Modifications_Controller_Enhancements() {
 	FuncWrite32(0x45D2C5, 0xC58314C7, (DWORD)&options_screen_skip_joy_button_draws);
 	MemWrite32(0x45D2C9, 0x14C38308, 0x90909090);
 	MemWrite8(0x45D2CD, 0x41, 0x90);
-	//jump joystick and throttle button drawing
-	MemWrite8(0x45D36B, 0x50, 0xE9); //JMP 0045D455
-	MemWrite32(0x45D36C, 0x2C249C8B, 0xE5);
-	MemWrite16(0x45D370, 0x0002, 0x9090);
-	MemWrite8(0x45D372, 0x00, 0x90);
+	
+	//just draw the "calibrate joystick" button
+	//jump over the drawing of the "calibrate throttle" button and text
+	MemWrite16(0x45D3CD, 0x3D75, 0x3BEB); //JMP SHORT 0045D40A                   
+	MemWrite8(0x45D40B, 0x34, 0x49); //JMP SHORT 0045D455
+
 
 	//skip the checking of redundant joystick buttons when controller enhancements are enabled.
 	MemWrite8(0x45D797, 0x47, 0xE8);
 	FuncWrite32(0x45D798, 0x8314C283, (DWORD)&options_screen_skip_joy_button_checks);
 	MemWrite16(0x45D79C, 0x14C3, 0x9090);
-	//jump joystick and throttle calibration checks
-	MemWrite16(0x45D7C2, 0x8E0F, 0xE990);
+
+	//adjust the y position check for the "calibrate joystick" button.
+	//BF 10270000                  MOV EDI, 332-50
+	MemWrite16(0x45D7D3, 0x3D6B, 0xBF90);
+	MemWrite32(0x45D7D5, 0x4BAC9C, 332-50);
+	MemWrite8(0x45D7D9, 0x14, 0x90);
+
+	//call config joy window replacing the old "calibrate joystick" routine flag.
+	MemWrite16(0x45D81D, 0x84C7, 0x9090);
+	MemWrite8(0x45D81F, 0x24, 0xE8);
+	FuncWrite32(0x45D820, 0x023C, (DWORD)&options_screen_calibrate_controller);
+	MemWrite32(0x45D824, 0x02, 0x90909090);
+
+	//jump the "calibrate throttle" button check.
+	MemWrite16(0x45D828, 0x868B, 0x55EB);//JMP SHORT 0045D87F
+	MemWrite32(0x45D82A, 0x0140, 0x90909090);
 }
 
 
