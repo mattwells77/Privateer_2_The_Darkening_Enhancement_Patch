@@ -2135,6 +2135,11 @@ void Modifications_Display() {
     MemWrite8(0x45B446, 0xE8, 0x90);
     MemWrite32(0x45B447, 0xFFFBD579, 0x90909090);
 
+    //disable set mouse pos for P.A.D. to allow mouse to move freely in windowed mode.
+    MemWrite8(0x436B34, 0xE8, 0x90);
+    MemWrite32(0x436B35, 0xFFFE1E8B, 0x90909090);
+
+
     //0043C14E | .E8 E1FC0100 | CALL EMAIL() ? ?
     FuncReplace32(0x43C14F, 0x01FCE1, (DWORD)&cursor_clipper_email_screen);
     //00442593 | .E8 BC9E0100   CALL DIARY() ? ?
