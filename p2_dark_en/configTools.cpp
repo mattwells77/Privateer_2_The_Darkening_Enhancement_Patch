@@ -172,27 +172,33 @@ static void ConfigCreate() {
 
     ConfigWriteInt(L"MOUSE", L"DEAD_ZONE", CONFIG_MOUSE_DEAD_ZONE);
     wchar_t profile_name[16];
-    for (int i = 0; i < P2_PROFILE_MAX; i++) {
+    for (int i = 0; i < NUM_JOY_PROFILES; i++) {
         switch (i) {
         case 0:
             swprintf(profile_name, _countof(profile_name), L"MOUSE_GUI");
+            ConfigWriteInt(profile_name, L"BUTTON_01", static_cast<int>(P2_ACTIONS::Left_Click));
+            ConfigWriteInt(profile_name, L"BUTTON_02", static_cast<int>(P2_ACTIONS::Right_Click));
             break;
         case 1:
             swprintf(profile_name, _countof(profile_name), L"MOUSE_SPACE");
+            ConfigWriteInt(profile_name, L"BUTTON_01", static_cast<int>(P2_ACTIONS::Left_Click));
+            ConfigWriteInt(profile_name, L"BUTTON_02", static_cast<int>(P2_ACTIONS::Right_Click));
             break;
         default:
             swprintf(profile_name, _countof(profile_name), L"MOUSE_REMAP_%02d", i - 1);
+            ConfigWriteInt(profile_name, L"BUTTON_01", static_cast<int>(P2_ACTIONS::None));
+            ConfigWriteInt(profile_name, L"BUTTON_02", static_cast<int>(P2_ACTIONS::None));
             break;
         }
-        ConfigWriteInt(profile_name, L"BUTTON_01", CONFIG_MOUSE_BUTTON_01);
-        ConfigWriteInt(profile_name, L"BUTTON_02", CONFIG_MOUSE_BUTTON_02);
-        ConfigWriteInt(profile_name, L"BUTTON_03", CONFIG_MOUSE_BUTTON_03);
-        ConfigWriteInt(profile_name, L"BUTTON_04", CONFIG_MOUSE_BUTTON_04);
-        ConfigWriteInt(profile_name, L"BUTTON_05", CONFIG_MOUSE_BUTTON_05);
-        ConfigWriteInt(profile_name, L"MOUSE_WHEEL_UP", CONFIG_MOUSE_WHEEL_UP);
-        ConfigWriteInt(profile_name, L"MOUSE_WHEEL_DOWN", CONFIG_MOUSE_WHEEL_DOWN);
-        ConfigWriteInt(profile_name, L"MOUSE_WHEEL_LEFT", CONFIG_MOUSE_WHEEL_LEFT);
-        ConfigWriteInt(profile_name, L"MOUSE_WHEEL_RIGHT", CONFIG_MOUSE_WHEEL_RIGHT);
+        //ConfigWriteInt(profile_name, L"BUTTON_01", CONFIG_MOUSE_BUTTON_01);
+        //ConfigWriteInt(profile_name, L"BUTTON_02", CONFIG_MOUSE_BUTTON_02);
+        ConfigWriteInt(profile_name, L"BUTTON_03", static_cast<int>(P2_ACTIONS::None));
+        ConfigWriteInt(profile_name, L"BUTTON_04", static_cast<int>(P2_ACTIONS::None));
+        ConfigWriteInt(profile_name, L"BUTTON_05", static_cast<int>(P2_ACTIONS::None));
+        ConfigWriteInt(profile_name, L"MOUSE_WHEEL_UP", static_cast<int>(P2_ACTIONS::None));
+        ConfigWriteInt(profile_name, L"MOUSE_WHEEL_DOWN", static_cast<int>(P2_ACTIONS::None));
+        ConfigWriteInt(profile_name, L"MOUSE_WHEEL_LEFT", static_cast<int>(P2_ACTIONS::None));
+        ConfigWriteInt(profile_name, L"MOUSE_WHEEL_RIGHT", static_cast<int>(P2_ACTIONS::None));
     }
 
 

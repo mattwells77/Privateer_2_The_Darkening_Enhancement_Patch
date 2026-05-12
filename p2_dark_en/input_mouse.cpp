@@ -148,34 +148,40 @@ void MOUSE::Load() {
 	PROFILE_TYPE saved_pro_type = current_pro_type;
 	wchar_t profile_name[16];
 
-	for (int i = 0; i < P2_PROFILE_MAX; i++) {
+	for (int i = 0; i < NUM_JOY_PROFILES; i++) {
 		switch (i) {
 		case 0:
 			current_pro_type = PROFILE_TYPE::GUI;
 			swprintf(profile_name, _countof(profile_name), L"MOUSE_GUI");
+			action_key_button[0].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_01", static_cast<int>(P2_ACTIONS::Left_Click))));
+			action_key_button[1].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_02", static_cast<int>(P2_ACTIONS::Right_Click))));
 			break;
 		case 1:
 			current_pro_type = PROFILE_TYPE::Space;
 			swprintf(profile_name, _countof(profile_name), L"MOUSE_SPACE");
+			action_key_button[0].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_01", static_cast<int>(P2_ACTIONS::Left_Click))));
+			action_key_button[1].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_02", static_cast<int>(P2_ACTIONS::Right_Click))));
 			break;
 		default:
 			current_pro_type = static_cast<PROFILE_TYPE>(i);
 			swprintf(profile_name, _countof(profile_name), L"MOUSE_REMAP_%02d", i - 1);
+			action_key_button[0].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_01", static_cast<int>(P2_ACTIONS::None))));
+			action_key_button[1].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_02", static_cast<int>(P2_ACTIONS::None))));
 			break;
 		}
 
-		action_key_button[0].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_01", CONFIG_MOUSE_BUTTON_01)));
-		action_key_button[1].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_02", CONFIG_MOUSE_BUTTON_02)));
-		action_key_button[2].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_03", CONFIG_MOUSE_BUTTON_03)));
-		action_key_button[3].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_04", CONFIG_MOUSE_BUTTON_04)));
-		action_key_button[4].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_05", CONFIG_MOUSE_BUTTON_05)));
+		//action_key_button[0].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_01", CONFIG_MOUSE_BUTTON_01)));
+		//action_key_button[1].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_02", CONFIG_MOUSE_BUTTON_02)));
+		action_key_button[2].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_03", static_cast<int>(P2_ACTIONS::None))));
+		action_key_button[3].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_04", static_cast<int>(P2_ACTIONS::None))));
+		action_key_button[4].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"BUTTON_05", static_cast<int>(P2_ACTIONS::None))));
 
 
-		action_key_wheel_v[0].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"MOUSE_WHEEL_UP", CONFIG_MOUSE_WHEEL_UP)));
-		action_key_wheel_v[1].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"MOUSE_WHEEL_DOWN", CONFIG_MOUSE_WHEEL_DOWN)));
+		action_key_wheel_v[0].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"MOUSE_WHEEL_UP", static_cast<int>(P2_ACTIONS::None))));
+		action_key_wheel_v[1].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"MOUSE_WHEEL_DOWN", static_cast<int>(P2_ACTIONS::None))));
 
-		action_key_wheel_h[0].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"MOUSE_WHEEL_LEFT", CONFIG_MOUSE_WHEEL_LEFT)));
-		action_key_wheel_h[1].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"MOUSE_WHEEL_RIGHT", CONFIG_MOUSE_WHEEL_RIGHT)));
+		action_key_wheel_h[0].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"MOUSE_WHEEL_LEFT", static_cast<int>(P2_ACTIONS::None))));
+		action_key_wheel_h[1].SetAction(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, L"MOUSE_WHEEL_RIGHT", static_cast<int>(P2_ACTIONS::None))));
 	}
 
 	current_pro_type = saved_pro_type;
@@ -192,7 +198,7 @@ void MOUSE::Save() {
 	wchar_t profile_name[16];
 
 
-	for (int i = 0; i < P2_PROFILE_MAX; i++) {
+	for (int i = 0; i < NUM_JOY_PROFILES; i++) {
 		switch (i) {
 		case 0:
 			current_pro_type = PROFILE_TYPE::GUI;

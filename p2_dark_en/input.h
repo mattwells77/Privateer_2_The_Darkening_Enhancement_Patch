@@ -25,18 +25,13 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <winrt/Windows.Gaming.Input.h>
 #include <winrt/Windows.Foundation.h>
 
-#define KEYS_DAT_CODE			'K' + ('E' << 8) + ('Y' << 16) + ('S' << 24)
-#define GAME_CODE	'P' + ('2' << 8) + ('D' << 16) + ('K' << 24)
+#define KEYS_DAT_CODE	'K' + ('E' << 8) + ('Y' << 16) + ('S' << 24)
+#define GAME_CODE		'P' + ('2' << 8) + ('D' << 16) + ('K' << 24)
 
 #define JOYSTICK_PROFILE_VERSION	3
 #define JOYSTICK_CONFIG_PATH			L"controllers"
 
 #define NUM_MOUSE_BUTTONS	5
-
-
-extern BYTE P2_ACTIONS_KEYS[][4];
-
-#define NUM_JOY_PROFILES	5
 
 enum class PROFILE_TYPE {
 	GUI,
@@ -47,17 +42,20 @@ enum class PROFILE_TYPE {
 	End,
 };
 
+#define NUM_JOY_PROFILES	static_cast<int>(PROFILE_TYPE::End)
+
+#define PROFILE_GUI		0; 
+#define PROFILE_SPACE	1; 
+
 extern PROFILE_TYPE current_pro_type;
 
 extern PROFILE_TYPE current_pro_type_map;
 
-#define PROFILE_SPACE	1; 
-#define PROFILE_GUI		0; 
 
 extern int profile_space;
 extern int profile_gui;
 
-extern int P2_PROFILE_MAX;
+//extern int P2_PROFILE_MAX;
 
 enum class P2_ACTIONS {
 	None,
@@ -710,4 +708,5 @@ extern MOUSE Mouse;
 extern WORD mouse_state_space[3];
 extern bool controller_enhancements_enabled;
 
+extern BYTE P2_ACTIONS_KEYS[][4];
 extern bool mouse_double_click_left;

@@ -34,6 +34,7 @@ using namespace Windows::Gaming::Input;
 
 HWND hWin_SaveAsPreset = nullptr;
 HWND hWin_Config_Joy = nullptr;
+HWND hWin_Config_Joy_Off = nullptr;
 HWND hWin_Config_Joy_Control = nullptr;
 HWND hWin_Config_Control = nullptr;
 HWND hWin_Config_Mouse = nullptr;
@@ -50,7 +51,7 @@ BOOL joyList_Updated = 0;
 HWND hWin_AxisCalibrate = nullptr;
 
 #define GEN_TEXT_BUFF_COUNT	64
-wchar_t general_string_buff[GEN_TEXT_BUFF_COUNT]{0};
+wchar_t general_string_buff[GEN_TEXT_BUFF_COUNT]{ 0 };
 wchar_t general_string_buff2[GEN_TEXT_BUFF_COUNT]{ 0 };
 
 int current_JoySelected = -1;
@@ -2331,6 +2332,30 @@ static INT_PTR CALLBACK DialogProc_JoyConfig(HWND hwndDlg, UINT uMsg, WPARAM wPa
 }
 
 
+//_____________________________________________________________________________________________________
+static INT_PTR CALLBACK DialogProc_JoyConfig_Off(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+
+	switch (uMsg) {
+	case WM_INITDIALOG: {
+
+		InitCommonControls();
+
+		hWin_Config_Joy_Off = hwndDlg;
+		return TRUE;
+	}
+	case WM_DESTROY: {
+		hWin_Config_Joy_Off = nullptr;
+		return FALSE;
+	}
+	default:
+		return FALSE;
+		break;
+	}
+
+	return TRUE;
+}
+
+
 //__________________________________________________________________________
 BOOL JoyConfig_Refresh_CurrentAction_Mouse(P2_ACTIONS action, BOOL activate) {
 
@@ -3705,8 +3730,10 @@ static INT_PTR CALLBACK DialogProc_Config_Keys2(HWND hwndDlg, UINT uMsg, WPARAM 
 
 //______________________________________________________________________________________________________
 static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	
 	static HWND hwndParent = nullptr;
 	static bool was_Deactivated = false;
+	static HWND hWin_Config_Joy_Active = nullptr;
 	
 	switch (uMsg) {
 	case WM_INITDIALOG: {
@@ -3758,8 +3785,14 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 		EnableWindow(hwndParent, FALSE);
 	
 		//create tab windows.
-		if(controller_enhancements_enabled)
+		if (controller_enhancements_enabled) {
 			hWin_Config_Joy = CreateDialogParam(phinstDLL, MAKEINTRESOURCE(IDD_DIALOG_CONFIG_JOY), hwndDlg, &DialogProc_JoyConfig, 0);
+			hWin_Config_Joy_Active = hWin_Config_Joy;
+		}
+		else {
+			hWin_Config_Joy_Off = CreateDialogParam(phinstDLL, MAKEINTRESOURCE(IDD_DIALOG_CONFIG_JOY_OFF), hwndDlg, &DialogProc_JoyConfig_Off, 0);
+			hWin_Config_Joy_Active = hWin_Config_Joy_Off;
+		}
 		hWin_Config_Mouse = CreateDialogParam(phinstDLL, MAKEINTRESOURCE(IDD_DIALOG_CONFIG_MOUSE), hwndDlg, &DialogProc_Config_Mouse, 0);
 
 		//hWin_Config_Keys1 = CreateDialogParam(phinstDLL, MAKEINTRESOURCE(IDD_DIALOG_CONFIG_KEYS_1), hwndDlg, &DialogProc_Config_Keys1, 0);
@@ -3770,8 +3803,8 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 		GetClientRect(hwndDlg, &rcTab);
 		TabCtrl_AdjustRect(hwndTab, FALSE, &rcTab);
 
-		if (controller_enhancements_enabled)
-			SetWindowPos(hWin_Config_Joy, nullptr, rcTab.left, rcTab.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+
+		SetWindowPos(hWin_Config_Joy_Active, nullptr, rcTab.left, rcTab.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 		SetWindowPos(hWin_Config_Mouse, nullptr, rcTab.left, rcTab.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 		//SetWindowPos(hWin_Config_Keys1, nullptr, rcTab.left, rcTab.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 		//SetWindowPos(hWin_Config_Keys2, nullptr, rcTab.left, rcTab.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
@@ -3779,12 +3812,12 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 		//set initial focus tab.
 		if (controller_enhancements_enabled && *p_p2_controller_flags) {
 			TabCtrl_SetCurFocus(hwndTab, 0);
-			ShowWindow(hWin_Config_Joy, SW_SHOW);
+			ShowWindow(hWin_Config_Joy_Active, SW_SHOW);
 			ShowWindow(hWin_Config_Mouse, SW_HIDE);
 		}
 		else {
 			TabCtrl_SetCurFocus(hwndTab, 1);
-			ShowWindow(hWin_Config_Joy, SW_HIDE);
+			ShowWindow(hWin_Config_Joy_Active, SW_HIDE);
 			ShowWindow(hWin_Config_Mouse, SW_SHOW);
 		}
 
@@ -3795,22 +3828,22 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 		case TCN_SELCHANGE: {
 			HWND hwndTab = GetDlgItem(hwndDlg, IDC_TAB1);
 			int tabNum = TabCtrl_GetCurSel(hwndTab);
-			if (!controller_enhancements_enabled && tabNum == 0) 
-				TabCtrl_SetCurFocus(hwndTab, 1);
-			else if (tabNum == 0) {
-				ShowWindow(hWin_Config_Joy, SW_SHOW);
+			//if (!controller_enhancements_enabled && tabNum == 0) 
+			//	TabCtrl_SetCurFocus(hwndTab, 1);
+			if (tabNum == 0) {
+				ShowWindow(hWin_Config_Joy_Active, SW_SHOW);
 				ShowWindow(hWin_Config_Mouse, SW_HIDE);
 				ShowWindow(hWin_Config_Keys1, SW_HIDE);
 				ShowWindow(hWin_Config_Keys2, SW_HIDE);
 			}
 			else if (tabNum == 1) {
-				ShowWindow(hWin_Config_Joy, SW_HIDE);
+				ShowWindow(hWin_Config_Joy_Active, SW_HIDE);
 				ShowWindow(hWin_Config_Mouse, SW_SHOW);
 				ShowWindow(hWin_Config_Keys1, SW_HIDE);
 				ShowWindow(hWin_Config_Keys2, SW_HIDE);
 			}
 			else if (tabNum == 2) {
-				ShowWindow(hWin_Config_Joy, SW_HIDE);
+				ShowWindow(hWin_Config_Joy_Active, SW_HIDE);
 				ShowWindow(hWin_Config_Mouse, SW_HIDE);
 				if (!hWin_Config_Keys1) {
 					hWin_Config_Keys1 = CreateDialogParam(phinstDLL, MAKEINTRESOURCE(IDD_DIALOG_CONFIG_KEYS_1), hwndDlg, &DialogProc_Config_Keys1, 0);
@@ -3824,7 +3857,7 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 				ShowWindow(hWin_Config_Keys2, SW_HIDE);
 			}
 			else if (tabNum == 3) {
-				ShowWindow(hWin_Config_Joy, SW_HIDE);
+				ShowWindow(hWin_Config_Joy_Active, SW_HIDE);
 				ShowWindow(hWin_Config_Mouse, SW_HIDE);
 				ShowWindow(hWin_Config_Keys1, SW_HIDE);
 				if (!hWin_Config_Keys2) {
@@ -3850,8 +3883,8 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 		GetClientRect(hwndDlg, &rcTab);
 		TabCtrl_AdjustRect(hwndTab, FALSE, &rcTab);
 
-		if (controller_enhancements_enabled)
-			SetWindowPos(hWin_Config_Joy, nullptr, rcTab.left, rcTab.top, 0,0, SWP_NOZORDER| SWP_NOSIZE);
+
+		SetWindowPos(hWin_Config_Joy_Active, nullptr, rcTab.left, rcTab.top, 0,0, SWP_NOZORDER| SWP_NOSIZE);
 		SetWindowPos(hWin_Config_Mouse, nullptr, rcTab.left, rcTab.top, 0,0, SWP_NOZORDER | SWP_NOSIZE);
 		if (hWin_Config_Keys1)
 			SetWindowPos(hWin_Config_Keys1, nullptr, rcTab.left, rcTab.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
@@ -3862,7 +3895,8 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDOK: {
-			Joysticks.Save();
+			if (controller_enhancements_enabled)
+				Joysticks.Save();
 			Mouse.Save();
 			Keys_Save();
 			EnableWindow(hwndParent, TRUE);
@@ -3870,7 +3904,8 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 			return FALSE;
 		}
 		case IDCANCEL: {
-			Joysticks.Load();
+			if (controller_enhancements_enabled)
+				Joysticks.Load();
 			Mouse.Load();
 			Keys_Load();
 			EnableWindow(hwndParent, TRUE);
@@ -3882,7 +3917,8 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 		}
 		break;
 	case WM_CLOSE:
-		Joysticks.Load();
+		if (controller_enhancements_enabled)
+			Joysticks.Load();
 		Mouse.Load();
 		Keys_Load();
 		EnableWindow(hwndParent, TRUE);
@@ -3890,6 +3926,7 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 		return FALSE;
 	case WM_DESTROY: {
 		hWin_Config_Control = nullptr;
+		hWin_Config_Joy_Active = nullptr;
 		if (was_Deactivated)
 			SetWindowActivation(TRUE);
 		return FALSE;

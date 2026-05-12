@@ -44,9 +44,7 @@ P2_JOY_AXES p2_joy_axes{};
 PROFILE_TYPE current_pro_type = PROFILE_TYPE::GUI;
 PROFILE_TYPE current_pro_type_map = PROFILE_TYPE::Space;
 
-LONG P2_ACTIONS_MAX = static_cast<LONG>(P2_ACTIONS::End)-1;
-
-int P2_PROFILE_MAX = static_cast<int>(PROFILE_TYPE::End);
+#define P2_ACTIONS_MAX	(static_cast<int>(P2_ACTIONS::End)-1)
 
 vector<PROFILE_TYPE> profile_map_list;
 
@@ -87,7 +85,9 @@ bool Get_Joystick_Config_Path(wstring *p_ret_string) {
 //________________________________________
 void Simulate_Key_Press(P2_ACTIONS action) {
 
-	if(JoyConfig_Refresh_CurrentAction(action, TRUE) && JoyConfig_Refresh_CurrentAction_Mouse(action, TRUE))
+	if(JoyConfig_Refresh_CurrentAction(action, TRUE))
+		return;
+	if (JoyConfig_Refresh_CurrentAction_Mouse(action, TRUE))
 		return;
 
 	switch (action) {
@@ -176,7 +176,9 @@ void Simulate_Key_Press(P2_ACTIONS action) {
 //__________________________________________
 void Simulate_Key_Release(P2_ACTIONS action) {
 
-	if(JoyConfig_Refresh_CurrentAction(action, FALSE) && JoyConfig_Refresh_CurrentAction_Mouse(action, FALSE))
+	if(JoyConfig_Refresh_CurrentAction(action, FALSE))
+		return;
+	if (JoyConfig_Refresh_CurrentAction_Mouse(action, FALSE))
 		return;
 
 	switch (action) {
@@ -292,7 +294,9 @@ void Check_Simulated_Key_For_Release() {
 //____________________________________________________________
 void Simulate_Key_Pressed(P2_ACTIONS action, LONG duration_ms) {
 
-	if (JoyConfig_Refresh_CurrentAction(action, TRUE) && JoyConfig_Refresh_CurrentAction_Mouse(action, TRUE))
+	if (JoyConfig_Refresh_CurrentAction(action, TRUE))
+		return;
+	if (JoyConfig_Refresh_CurrentAction_Mouse(action, TRUE))
 		return;
 
 	LONGLONG duration = (LONGLONG)duration_ms * Frequency.QuadPart / 1000LL;//ms to ticks
@@ -825,7 +829,7 @@ BOOL JOYSTICK::Profile_Load(const wchar_t* file_path) {
 				i_data = 0;
 			p_axis->Set_Button_Action_Max(static_cast<P2_ACTIONS>(i_data));
 			if (version >= 3) {
-				for (int i = 1; i < P2_PROFILE_MAX; i++) {
+				for (int i = 1; i < NUM_JOY_PROFILES; i++) {
 					current_pro_type = static_cast<PROFILE_TYPE>(i);
 					fread(&i_data, sizeof(i_data), 1, fileCache);
 					p_axis->Set_Axis_As(static_cast<AXIS_TYPE>(i_data));
@@ -870,7 +874,7 @@ BOOL JOYSTICK::Profile_Load(const wchar_t* file_path) {
 			p_key->Set_Action(static_cast<P2_ACTIONS>(i_data));
 		}
 		if (version >= 3) {
-			for (int i = 1; i < P2_PROFILE_MAX; i++) {
+			for (int i = 1; i < NUM_JOY_PROFILES; i++) {
 				current_pro_type = static_cast<PROFILE_TYPE>(i);
 				//current_pro_type = PROFILE_TYPE::Space;
 				for (int i = 0; i < num_buttons; i++) {
@@ -920,7 +924,7 @@ BOOL JOYSTICK::Profile_Load(const wchar_t* file_path) {
 				p_switch->Set_Action(i, static_cast<P2_ACTIONS>(i_data));
 			}
 			if (version >= 3) {
-				for (int i = 1; i < P2_PROFILE_MAX; i++) {
+				for (int i = 1; i < NUM_JOY_PROFILES; i++) {
 					current_pro_type = static_cast<PROFILE_TYPE>(i);
 					//current_pro_type = PROFILE_TYPE::Space;
 					for (int i = 0; i < num_positions; i++) {
@@ -1015,7 +1019,7 @@ BOOL JOYSTICK::Profile_Save(const wchar_t* file_path) {
 			fwrite(&p_limits->centre_max, sizeof(p_limits->centre_max), 1, fileCache);
 			fwrite(&p_limits->centre_span, sizeof(p_limits->centre_span), 1, fileCache);
 
-			for (int i = 0; i < P2_PROFILE_MAX; i++) {
+			for (int i = 0; i < NUM_JOY_PROFILES; i++) {
 				current_pro_type = static_cast<PROFILE_TYPE>(i);
 				i_data = static_cast<int>(p_axis->Get_Axis_As());
 				fwrite(&i_data, sizeof(i_data), 1, fileCache);
@@ -1033,7 +1037,7 @@ BOOL JOYSTICK::Profile_Save(const wchar_t* file_path) {
 
 		fwrite(&num_buttons, sizeof(num_buttons), 1, fileCache);
 		
-		for (int i = 0; i < P2_PROFILE_MAX; i++) {
+		for (int i = 0; i < NUM_JOY_PROFILES; i++) {
 			current_pro_type = static_cast<PROFILE_TYPE>(i);
 			for (int i = 0; i < num_buttons; i++) {
 				p_key = Get_Action_Button(i);
@@ -1053,7 +1057,7 @@ BOOL JOYSTICK::Profile_Save(const wchar_t* file_path) {
 			int num_positions = p_switch->Get_Num_Positions();
 			fwrite(&num_positions, sizeof(num_positions), 1, fileCache);
 			
-			for (int i = 0; i < P2_PROFILE_MAX; i++) {
+			for (int i = 0; i < NUM_JOY_PROFILES; i++) {
 				current_pro_type = static_cast<PROFILE_TYPE>(i);
 				for (int i = 0; i < num_positions; i++) {
 					i_data = static_cast<int>(p_switch->GetAction(i));
