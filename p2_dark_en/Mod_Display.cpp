@@ -653,7 +653,11 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
                     return 0;
                 }
                 else if (wParam == 'J') {
+                    if (is_cursor_clipped)
+                        ClipCursor(nullptr);
                     JoyConfig_Main();
+                    if (is_cursor_clipped)
+                        ClipMouseCursor();
                     return 0;
                 }
             }
