@@ -85,9 +85,9 @@ bool Get_Joystick_Config_Path(wstring *p_ret_string) {
 //________________________________________
 void Simulate_Key_Press(P2_ACTIONS action) {
 
-	if(JoyConfig_Refresh_CurrentAction(action, TRUE))
-		return;
-	if (JoyConfig_Refresh_CurrentAction_Mouse(action, TRUE))
+	BOOL is_config = JoyConfig_Refresh_CurrentAction(action, TRUE);
+	is_config |= JoyConfig_Refresh_CurrentAction_Mouse(action, TRUE);
+	if (is_config)
 		return;
 
 	switch (action) {
@@ -176,9 +176,9 @@ void Simulate_Key_Press(P2_ACTIONS action) {
 //__________________________________________
 void Simulate_Key_Release(P2_ACTIONS action) {
 
-	if(JoyConfig_Refresh_CurrentAction(action, FALSE))
-		return;
-	if (JoyConfig_Refresh_CurrentAction_Mouse(action, FALSE))
+	BOOL is_config = JoyConfig_Refresh_CurrentAction(action, FALSE);
+	is_config |= JoyConfig_Refresh_CurrentAction_Mouse(action, FALSE);
+	if (is_config)
 		return;
 
 	switch (action) {
@@ -294,9 +294,9 @@ void Check_Simulated_Key_For_Release() {
 //____________________________________________________________
 void Simulate_Key_Pressed(P2_ACTIONS action, LONG duration_ms) {
 
-	if (JoyConfig_Refresh_CurrentAction(action, TRUE))
-		return;
-	if (JoyConfig_Refresh_CurrentAction_Mouse(action, TRUE))
+	BOOL is_config = JoyConfig_Refresh_CurrentAction(action, TRUE);
+	is_config |= JoyConfig_Refresh_CurrentAction_Mouse(action, TRUE);
+	if (is_config)
 		return;
 
 	LONGLONG duration = (LONGLONG)duration_ms * Frequency.QuadPart / 1000LL;//ms to ticks
