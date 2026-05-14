@@ -84,3 +84,8 @@ void ConfigRefreshCache();
 const wchar_t* GetAppPath();
 const char* GetAppPathA();
 const wchar_t* GetAppDataPath();
+
+void Check_Command_Line_Overrides();
+
+extern std::wstring movies_path_override;
+extern std::wstring movies_ext_override;

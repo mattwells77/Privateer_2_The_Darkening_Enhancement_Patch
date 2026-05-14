@@ -98,10 +98,14 @@ static BOOL Set_Movie_Settings() {
     language_audio.append(char_buff);
     language_audio.append("]");
 
-    //set the hd movie directory.
-    ConfigReadString(L"MOVIES", L"PATH", CONFIG_MOVIES_PATH, wchar_buff, MAX_PATH);
-    //convert wstring to string
-    wcstombs_s(&num_bytes, char_buff, MAX_PATH, wchar_buff, _TRUNCATE);
+    if (!movies_path_override.empty())
+        wcstombs_s(&num_bytes, char_buff, MAX_PATH, movies_path_override.c_str(), _TRUNCATE);
+    else {
+        //set the hd movie directory.
+        ConfigReadString(L"MOVIES", L"PATH", CONFIG_MOVIES_PATH, wchar_buff, MAX_PATH);
+        //convert wstring to string
+        wcstombs_s(&num_bytes, char_buff, MAX_PATH, wchar_buff, _TRUNCATE);
+    }
 
     //skip over any space chars
     while (*char_ptr == ' ')
@@ -116,10 +120,14 @@ static BOOL Set_Movie_Settings() {
     Set_Movie_Config_Path();
     Debug_Info_Movie("movie_config_path: %s", movie_config_path.c_str());
 
-    //get the hd movie extension.
-    ConfigReadString(L"MOVIES", L"EXT", CONFIG_MOVIES_EXT, wchar_buff, MAX_PATH);
-    //convert wstring to string
-    wcstombs_s(&num_bytes, char_buff, MAX_PATH, wchar_buff, _TRUNCATE);
+    if (!movies_ext_override.empty())
+        wcstombs_s(&num_bytes, char_buff, MAX_PATH, movies_ext_override.c_str(), _TRUNCATE);
+    else {
+        //get the hd movie extension.
+        ConfigReadString(L"MOVIES", L"EXT", CONFIG_MOVIES_EXT, wchar_buff, MAX_PATH);
+        //convert wstring to string
+        wcstombs_s(&num_bytes, char_buff, MAX_PATH, wchar_buff, _TRUNCATE);
+    }
 
     //skip over any space chars
     char_ptr = char_buff;
