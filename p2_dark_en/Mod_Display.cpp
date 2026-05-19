@@ -1142,7 +1142,8 @@ static void Draw_Image_Buffer_Rect_Movie_Text_Top(IMAGE_BUFFER_RECT* from_struct
 
     LONG text_y = 0;
     LONG text_height = bottom - top;
-    LONG black_bar_height = (clientHeight - movie_height) / 2;
+    //LONG black_bar_height = (clientHeight - movie_height) / 2;
+    LONG black_bar_height = (LONG)(((float)surface_gui->GetHeight() / clientHeight) * ((clientHeight - movie_height) / 2));
 
     //draw text in the black area above the movie if there is room.
     if (black_bar_height >= text_height) {
@@ -1175,7 +1176,8 @@ static void Draw_Image_Buffer_Rect_Movie_Text_Bottom(IMAGE_BUFFER_RECT* from_str
 
     LONG text_y = 0;
     LONG text_height = bottom - top;
-    LONG black_bar_height = (clientHeight - movie_height) / 2;
+    //LONG black_bar_height = (clientHeight - movie_height) / 2;
+    LONG black_bar_height = (LONG)(((float)surface_gui->GetHeight() / clientHeight) * ((clientHeight - movie_height) / 2));
 
     //draw text in the black area under the movie if there is room.
     if (black_bar_height >= text_height) {
