@@ -873,6 +873,9 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             }
             if (pMovie_vlc)
                 pMovie_vlc->Pause(false);
+            
+            //clear keyboard on re-activation.
+            memset(p2_keyboard_state_main, 0, 256);
         }
         break;
     default:
