@@ -609,7 +609,8 @@ public:
 		setup = false;
 		deadzone_level = 0;
 		deadzone = 0;
-
+		invert_y_axis = false;
+		axis_limit_percentage = 100;
 	};
 	~MOUSE() {
 
@@ -631,6 +632,16 @@ public:
 	};
 	int Deadzone_Level() const { return deadzone_level; };
 	int Deadzone() const { return deadzone; };
+	void Invert_Y_Axis(bool in_invert_y_axis) { invert_y_axis = in_invert_y_axis; };
+	bool Is_Y_Axis_Inverted() const { return invert_y_axis; };
+	void Set_Axis_Limit_Pecentage(int in_axis_limit_percentage) {
+		axis_limit_percentage = in_axis_limit_percentage;
+		if (axis_limit_percentage > 100)
+			axis_limit_percentage = 100;
+		else if (axis_limit_percentage < 10)
+			axis_limit_percentage = 10;
+	};
+	int Axis_Limit_Percentage() const { return axis_limit_percentage; };
 
 	P2_ACTIONS GetAction_Button(int button);
 	P2_ACTIONS GetAction_Wheel_Up();
@@ -653,6 +664,8 @@ private:
 	bool setup;
 	int deadzone_level;
 	int deadzone;
+	bool invert_y_axis;
+	int axis_limit_percentage;
 };
 
 
@@ -705,9 +718,14 @@ void Get_Mouse_Position(LONG* p_x, LONG* p_y);
 //check double click for mouse, controller and keyboard.
 void Check_Mouse_Double_Click();
 
+bool Is_Alt_Flight_Mode();
+void Set_Alt_Flight_Mode(bool is_true);
+
 extern MOUSE Mouse;
 extern WORD mouse_state_space[3];
 extern bool controller_enhancements_enabled;
 
 extern BYTE P2_ACTIONS_KEYS[][4];
 extern bool mouse_double_click_left;
+
+

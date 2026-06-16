@@ -28,6 +28,8 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "dark.h"
 #include "input.h"
 
+LONG mouse_client_x = 0;
+LONG mouse_client_y = 0;
 
 //___________________________________________
 void Get_Mouse_Position(LONG* p_x, LONG* p_y) {
@@ -77,6 +79,9 @@ void Get_Mouse_Position(LONG* p_x, LONG* p_y) {
         x = (m.x - p.x);
         y = (m.y - p.y);
 
+        mouse_client_x = x;
+        mouse_client_y = y;
+
         if (surface_gui) {
             float fx = 0;
             float fy = 0;
@@ -105,6 +110,15 @@ void Get_Mouse_Position(LONG* p_x, LONG* p_y) {
 }
 
 
+//__________________________________________________________
+static void Get_Mouse_Position16(int16_t* p_x, int16_t* p_y) {
+    LONG x = 0;
+    LONG y = 0;
+    Get_Mouse_Position(&x, &y);
+    *p_x = (int16_t)x;
+    *p_y = (int16_t)y;
+}
+
 //_______________________________________________
 static void __declspec(naked) get_mouse_pos(void) {
 
@@ -116,7 +130,7 @@ static void __declspec(naked) get_mouse_pos(void) {
 
         push edx
         push eax
-        call Get_Mouse_Position
+        call Get_Mouse_Position16
         add esp, 0x8
 
         pop edi
@@ -240,12 +254,14 @@ static void Set_Mouse_Position(LONG x, LONG y) {
         LONG ix = (LONG)fx;
         if ((float)ix != fx)
             ix++;
+        mouse_client_x = ix;
         ix += client.x;
 
         fy += y * fheight / GUI_HEIGHT;
         LONG iy = (LONG)fy;
         if ((float)iy != fy)
             iy++;
+        mouse_client_y = iy;
         iy += client.y;
 
         SetCursorPos(ix, iy);
@@ -303,6 +319,113 @@ static void __declspec(naked) check_pad_doubleclick(void) {
 }
 
 
+//____________________________________________________________
+static void Get_Space_Mouse_Movement(float* p_fx, float* p_fy) {
+
+    LONG centre_x = clientWidth / 2;
+    LONG centre_y = clientHeight / 2;
+
+    LONG x = mouse_client_x - centre_x;
+    LONG y = mouse_client_y - centre_y;
+
+    LONG range = centre_y;
+    if (centre_y > centre_x)
+        range = centre_x;
+
+    range = range * Mouse.Axis_Limit_Percentage() / 100;
+
+    if (x > range)
+        x = range;
+    else if (x < -range)
+        x = -range;
+
+    if (y > range)
+        y = range;
+    else if (y < -range)
+        y = -range;
+
+    //convert mouse movement value to the ships axis range between -1 and 1.
+    *p_fx = (float)x / range;
+    *p_fy = (float)y / range;
+
+    float f_deadzone = 1.0f / 32 * Mouse.Deadzone_Level();
+
+    if (*p_fx <= f_deadzone && *p_fx >= -f_deadzone)
+        *p_fx = 0;
+    if (*p_fy <= f_deadzone && *p_fy >= -f_deadzone)
+        *p_fy = 0;
+
+    if (Mouse.Is_Y_Axis_Inverted())
+        *p_fy = -*p_fy;
+}
+
+
+//________________________________________________
+static void Update_Space_Mouse(BYTE* space_struct) {
+
+    int16_t* p_mouse_x = (int16_t*)(space_struct + 0x140);
+    int16_t* p_mouse_y = (int16_t*)(space_struct + 0x142);
+    Get_Mouse_Position16(p_mouse_x, p_mouse_y);
+
+    uint16_t* p_mouse_button_1 = (uint16_t*)(space_struct + 0x14C);
+    uint16_t* p_mouse_button_2 = (uint16_t*)(space_struct + 0x14E);
+    Get_Mouse_Buttons(p_mouse_button_1, p_mouse_button_2);
+    
+    uint16_t* p_mouse_button_pressed = (uint16_t*)(space_struct + 0x152);
+    if (p_mouse_button_1 || p_mouse_button_2)
+        *p_mouse_button_pressed = 1;
+
+    if (*p_p2_controller_flags != 0)
+        return;
+
+    int16_t* p_mouse_x_centred = (int16_t*)(space_struct + 0x148);
+    int16_t* p_mouse_y_centred = (int16_t*)(space_struct + 0x14A);
+
+    float f_mouse_x = 0;
+    float f_mouse_y = 0;
+    Get_Space_Mouse_Movement(&f_mouse_x, &f_mouse_y);
+
+    *p_mouse_x_centred = (int16_t)(f_mouse_x * 240);
+    *p_mouse_y_centred = (int16_t)(f_mouse_y * 240);
+
+    void* p_pc_ship_struct = (void*)(space_struct + (*p_p2_space_struct_number_of_objects * SPACE_OBJECT_STRUCT_SIZE));
+
+    *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FX_OFFSET) = -f_mouse_x;
+
+    *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FR_OFFSET) = -(float)p2_joy_axes.r;
+    //uint16_t* p_mouse_button_2 = (uint16_t*)(space_struct + 0x14E);
+    if (*p_mouse_button_2) {
+        *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FR_OFFSET) = -f_mouse_x;
+        *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FX_OFFSET) = 0;
+    }
+    else if (Is_Alt_Flight_Mode()) {
+        *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FR_OFFSET) += -f_mouse_x;
+        if (*(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FR_OFFSET) > 1.0f)
+            *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FR_OFFSET) = 1.0f;
+        else if (*(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FR_OFFSET) < -1.0f)
+            *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FR_OFFSET) = -1.0f;
+    }
+
+    *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FY_OFFSET) = -f_mouse_y;
+}
+
+
+//____________________________________________________
+static void __declspec(naked) update_space_mouse(void) {
+
+    __asm {
+        push ebp
+
+        push ebp
+        call Update_Space_Mouse
+        add esp, 0x4;
+
+        pop ebp
+        ret
+    }
+}
+
+
 //________________________
 void Modifications_Mouse() {
 
@@ -326,4 +449,12 @@ void Modifications_Mouse() {
     MemWrite8(0x436BA2, 0x66, 0x90);
     MemWrite16(0x436BA3, 0x80FF, 0xE890);
     FuncWrite32(0x436BA5, 0x0EDE, (DWORD)&check_pad_doubleclick);
+
+    //update space mouse control
+    FuncReplace32(0x44FDE8, 0xFFFF67D8, (DWORD)&update_space_mouse);
+    //jump over mouse movement section.
+    MemWrite16(0x4501FA, 0x850F, 0xE990); //JMP 00450369 to mouse button section.
+    MemWrite32(0x4501FC, 0x01F6, 0x0169);
+    //jump over button 2 check, done in Update_Space_Mouse function.
+    MemWrite8(0x4503A7, 0x74, 0xEB);
 }

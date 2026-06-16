@@ -34,6 +34,7 @@ using namespace std;
 using namespace winrt;
 using namespace Windows::Gaming::Input;
 
+bool alt_flt_mode = true;
 
 bool controller_enhancements_enabled = false;
 double key_throttle = 1.0f;//stored throttle value controlled by keys.
@@ -58,6 +59,24 @@ struct SIMULATED_KEY_ACTION {
 };
 
 vector<SIMULATED_KEY_ACTION> simulated_keys;
+
+
+//_______________________
+bool Is_Alt_Flight_Mode() {
+	static bool run_once = false;
+	if (!run_once) {
+		alt_flt_mode = ConfigReadInt_InGame(L"SPACE", L"ALT_FLIGHT_MODE", CONFIG_SPACE_ALT_FLIGHT_MODE);
+		run_once = true;
+	}
+	return alt_flt_mode;
+}
+
+
+//____________________________________
+void Set_Alt_Flight_Mode(bool is_true) {
+	alt_flt_mode = is_true;
+	ConfigWriteInt_InGame(L"SPACE", L"ALT_FLIGHT_MODE", alt_flt_mode);
+}
 
 
 //__________________________________________________
@@ -158,6 +177,7 @@ void Simulate_Key_Press(P2_ACTIONS action) {
 		return;
 	case P2_ACTIONS::Joystick_Roll_Modifier:
 		p2_joy_axes.yaw_as_roll = TRUE;
+		p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Select_Target_In_Crosshairs)][0]] |= 0x80;
 		return;
 	default:
 		p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(action)][0]] |= 0x80;
@@ -254,6 +274,7 @@ void Simulate_Key_Release(P2_ACTIONS action) {
 		return;
 	case P2_ACTIONS::Joystick_Roll_Modifier:
 		p2_joy_axes.yaw_as_roll = FALSE;
+		p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Select_Target_In_Crosshairs)][0]] = 0x0;
 		return;
 	default:
 		p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(action)][0]] = 0x0;
@@ -326,8 +347,37 @@ void Reset_Key_Throttle() {
 }
 
 
+//_______________________________
+static float Match_Target_Speed() {
+
+	DWORD num_objects = *p_p2_space_struct_number_of_objects;
+	BYTE* player_ship = (BYTE*)p_p2_space_struct + (num_objects * SPACE_OBJECT_STRUCT_SIZE);
+
+	LONG target_obj_num = *(LONG*)(player_ship + SPACE_PC_SHIP_STRUCT_CURRENT_TARGET_VARS);
+	target_obj_num >>= 0x10;
+	BYTE* target_ship = (BYTE*)p_p2_space_struct + (target_obj_num * SPACE_OBJECT_STRUCT_SIZE);
+
+	DWORD player_ship_type = *(DWORD*)(player_ship + SPACE_PC_SHIP_STRUCT_SHIP_TYPE_VARS);
+	player_ship_type >>= 0x10;
+
+	BYTE* ship_type_list = (BYTE*)p_p2_space_object_type_struct_list;
+	float player_ship_max_speed = *(float*)(ship_type_list + (player_ship_type * SPACE_OBJECT_TYPE_STRUCT_SIZE));
+
+	float target_speed = *(float*)(target_ship + SPACE_OBJECT_STRUCT_CURRENT_SPEED);
+
+	//float* p_player_ship_current_speed = (float*)(player_ship + SPACE_PC_SHIP_STRUCT_FT_OFFSET);
+	//Debug_Info("Match_Target_Speed: tagS: %f, plmaxS %f, plcurrS %f", target_speed, player_ship_max_speed, p_player_ship_current_speed);
+	if (target_speed > player_ship_max_speed)
+		return 1.0f;
+
+	return target_speed / player_ship_max_speed;
+}
+
+
 //_____________________
 void Update_Axis_Keys() {
+
+	static double last_joy_throttle = p2_joy_axes.t;
 
 	static BYTE* keys[11]{
 	&p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Roll_Left_NumPad)][0]],
@@ -373,6 +423,8 @@ void Update_Axis_Keys() {
 		static BYTE* p_speed_zero = P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Speed_Zero)];
 		static BYTE* p_speed_max = P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Speed_Max)];
 
+		static BYTE* p_match_target_speed = P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Match_Target_Speed)];
+
 		if (Get_Key_State(p_speed_plus[0],p_speed_plus[1] ,	p_speed_plus[2]) || Get_Key_State(p_speed_plus2[0], p_speed_plus2[1], p_speed_plus2[2]))
 			key_throttle += 0.02f;
 		
@@ -391,17 +443,18 @@ void Update_Axis_Keys() {
 		if (Get_Key_State(p_speed_max[0], p_speed_max[1], p_speed_max[2]))
 			key_throttle = 1.0f;
 
-		if (*p_p2_controller_flags == 0)// if mouse control, zero joy throttle addition to allow for mouse/key throttle.
-			p2_joy_axes.t = 0;
+		if (Get_Key_State(p_match_target_speed[0], p_match_target_speed[1], p_match_target_speed[2]))
+			key_throttle = Match_Target_Speed();
 
-		if (p2_joy_axes.t == 0)
-			p2_joy_axes.t += key_throttle;
-		else
-			key_throttle = 0.0f;
+		if (p2_joy_axes.t != last_joy_throttle) {
+			last_joy_throttle = p2_joy_axes.t;
+			if(*p_p2_controller_flags != 0)
+			key_throttle = p2_joy_axes.t;
+		}
+		else {
+			p2_joy_axes.t = key_throttle;
+		}
 	}
-	//else
-	//	key_throttle = 1.0f;
-
 }
 
 
@@ -1232,6 +1285,9 @@ void JOYSTICKS::Update() {
 	if (p2_joy_axes.yaw_as_roll) {
 		p2_joy_axes.r = p2_joy_axes.x;
 		p2_joy_axes.x = 0;
+	}
+	else if (Is_Alt_Flight_Mode()) {
+		p2_joy_axes.r += p2_joy_axes.x;
 	}
 	
 	Update_Axis_Keys();

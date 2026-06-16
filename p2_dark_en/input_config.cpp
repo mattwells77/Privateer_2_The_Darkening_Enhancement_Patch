@@ -2586,7 +2586,7 @@ static INT_PTR CALLBACK DialogProc_Config_Mouse(HWND hwndDlg, UINT uMsg, WPARAM 
 	case WM_INITDIALOG: {
 		hWin_Config_Mouse = hwndDlg;
 		InitCommonControls();
-		/*
+		
 		HWND hwnd_sub = nullptr;
 
 		hwnd_sub = GetDlgItem(hwndDlg, IDC_COMBO_DEAD_ZONE);
@@ -2605,7 +2605,28 @@ static INT_PTR CALLBACK DialogProc_Config_Mouse(HWND hwndDlg, UINT uMsg, WPARAM 
 		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"31.25%");
 
 		SendMessage(hwnd_sub, CB_SETCURSEL, (WPARAM)Mouse.Deadzone_Level(), (LPARAM)0);
-		*/
+		
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_COMBO_AXIS_RANGE);
+
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"10%");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"20%");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"30%");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"40%");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"50%");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"60%");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"70%");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"80%");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"90%");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"100%");
+
+		SendMessage(hwnd_sub, CB_SETCURSEL, (WPARAM)Mouse.Axis_Limit_Percentage() / 10 - 1, (LPARAM)0);
+
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_CHECK_INVERT_Y_AXIS);
+		DWORD checked = BST_UNCHECKED;
+		if (Mouse.Is_Y_Axis_Inverted())
+			checked = BST_CHECKED;
+		SendMessage(hwnd_sub, BM_SETCHECK, (WPARAM)checked, (LPARAM)0);
+
 		INITCOMMONCONTROLSEX iccex{ 0 };
 		//initialize common controls.
 		iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -2712,6 +2733,21 @@ static INT_PTR CALLBACK DialogProc_Config_Mouse(HWND hwndDlg, UINT uMsg, WPARAM 
 			if (HIWORD(wParam) == CBN_SELCHANGE) {
 				int deadzone = (int)(SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_DEAD_ZONE), CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
 				Mouse.Set_Deadzone_Level(deadzone);
+			}
+			return TRUE;
+		case IDC_COMBO_AXIS_RANGE:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				int percent = ((int)(SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_AXIS_RANGE), CB_GETCURSEL, (WPARAM)0, (LPARAM)0)) + 1) * 10;
+				Mouse.Set_Axis_Limit_Pecentage(percent);
+			}
+			return TRUE;
+		case IDC_CHECK_INVERT_Y_AXIS:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				DWORD button_state = (int)(SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0));
+				bool is_y_axis_inverted = false;
+				if (button_state & BST_CHECKED)
+					is_y_axis_inverted = true;
+				Mouse.Invert_Y_Axis(is_y_axis_inverted);
 			}
 			return TRUE;
 		default:
@@ -3828,6 +3864,14 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 			ShowWindow(hWin_Config_Mouse, SW_SHOW);
 		}
 
+
+		HWND hwnd_sub = GetDlgItem(hwndDlg, IDC_CHECK_ALT_FLT_MODE);
+		DWORD checked = BST_UNCHECKED;
+		if (Is_Alt_Flight_Mode())
+			checked = BST_CHECKED;
+		SendMessage(hwnd_sub, BM_SETCHECK, (WPARAM)checked, (LPARAM)0);
+
+
 		break;
 	}
 	case WM_NOTIFY:
@@ -3919,6 +3963,15 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 			DestroyWindow(hwndDlg);
 			return FALSE;
 		}
+		case IDC_CHECK_ALT_FLT_MODE:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				DWORD button_state = (int)(SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0));
+				bool is_alt_flt_mode = false;
+				if (button_state & BST_CHECKED)
+					is_alt_flt_mode = true;
+				Set_Alt_Flight_Mode(is_alt_flt_mode);
+			}
+			return TRUE;
 		default:
 			break;
 		}

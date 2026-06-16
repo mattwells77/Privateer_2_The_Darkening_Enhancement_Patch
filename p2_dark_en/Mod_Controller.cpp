@@ -72,7 +72,10 @@ static void Original_Joystick_Update() {
 	action_key_original[3].SetButton((*pbuttons & 0x8) >> 3);
 	*pbuttons = 0;
 
-	p2_joy_axes.y = *p_p2_space_struct_joy_fy;
+	if (*p_p2_y_axis_orientation)
+		p2_joy_axes.y = *p_p2_space_struct_joy_fy;
+	else
+		p2_joy_axes.y = -*p_p2_space_struct_joy_fy;
 
 	if (*p_p2_controller_flags & 0x2)
 		p2_joy_axes.t = *p_p2_space_struct_joy_ft;
@@ -86,6 +89,8 @@ static void Original_Joystick_Update() {
 	else {
 		p2_joy_axes.x = (*p_p2_space_struct_joy_fx);
 		p2_joy_axes.r = 0;
+		if (Is_Alt_Flight_Mode())
+			p2_joy_axes.r = p2_joy_axes.x;
 	}
 
 	Update_Axis_Keys();
@@ -182,12 +187,21 @@ static void __declspec(naked) get_current_throttle_state(void) {
 
 //______________________________________________________________________
 static void __declspec(naked) options_screen_skip_joy_button_draws(void) {
-	//don't draw buttons 12 to 15
+	//don't draw joy option buttons 12 to 15.
+	//don't draw flight orientation button, 16. 
 	__asm {
+		cmp ecx, 16
+		jne check_joy_buttons
+		add ecx, 1
+		add ebp, 8
+		jmp exit_func
+
+		check_joy_buttons:
 		cmp ecx, 11
 		jl exit_func
 		cmp ecx, 16
 		jge exit_func
+
 		add ecx, 4
 		add ebp, 32
 
@@ -204,8 +218,15 @@ static void __declspec(naked) options_screen_skip_joy_button_draws(void) {
 
 //_______________________________________________________________________
 static void __declspec(naked) options_screen_skip_joy_button_checks(void) {
-	//don't check buttons 12 to 15
+	//don't check joy option buttons 12 to 15.
+	//don't check flight orientation button, 16. 
 	__asm {
+		cmp edi, 16
+		jne check_joy_buttons
+		add edi, 1
+		jmp exit_func
+
+		check_joy_buttons:
 		cmp edi, 11
 		jl exit_func
 		cmp edi, 16
@@ -318,7 +339,7 @@ void Modifications_Controller_Enhancements() {
 	//adjust the y position check for the "calibrate joystick" button.
 	//BF 10270000                  MOV EDI, 332-50
 	MemWrite16(0x45D7D3, 0x3D6B, 0xBF90);
-	MemWrite32(0x45D7D5, 0x4BAC9C, 332-50);
+	MemWrite32(0x45D7D5, 0x4BAC9C, 332 - 50 - 20);
 	MemWrite8(0x45D7D9, 0x14, 0x90);
 
 	//call config joy window replacing the old "calibrate joystick" routine flag.
@@ -383,6 +404,14 @@ void Modifications_Joystick() {
 	//jump over "set speed to max" key check, this is now done in function "Update_Axis_Keys".
 	MemWrite16(0x442FBB, 0xDB31, 0x62EB);//JMP SHORT 0044301F
 
+	//jump over "match speed of target" key check, this is now done in function "Update_Axis_Keys".
+	MemWrite8(0x4425B6, 0xBB, 0xE9);//JMP 004426B6
+	MemWrite32(0x4425B7, 0x10, 0xFB);
+
 	//allow throttle value reading whether throttle control flag set or not. Throttle value for axes and keys are now set in "Update_Axis_Keys".
 	MemWrite16(0x44FE88, 0x6A75, 0x9090);
+
+	//skip y axis orientation section.
+	//This is still done in the Original_Joystick_Update function but no longer has an effect on the mouse y axis. Mice have their own setting for inverting the y axis.
+	MemWrite8(0x4503FD, 0x75, 0xEB);
 }

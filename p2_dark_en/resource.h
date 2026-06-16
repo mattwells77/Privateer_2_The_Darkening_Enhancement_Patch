@@ -301,6 +301,7 @@
 #define IDC_COMBO_JOY_PRESETS           1050
 #define IDC_COMBO_DEAD_ZONE             1051
 #define IDC_BUTTON_CALIBRATE_AXIS       1052
+#define IDC_COMBO_AXIS_RANGE            1052
 #define IDC_BUTTON_CENTRE_ALL           1053
 #define IDC_EDIT_PRESET_NAME            1054
 #define IDC_BUTTON_SAVE_PRESET          1055
@@ -368,6 +369,9 @@
 #define IDC_COMBO_MOD_20                1121
 #define IDC_COMBO_KEY_20                1122
 #define IDC_STATIC_INSTRUCTIONS         1122
+#define IDC_CHECK_INVERT_Y_AXIS         1124
+#define IDC_CHECK2                      1126
+#define IDC_CHECK_ALT_FLT_MODE          1126
 #define IDC_STATIC                      -1
 #define IDC_STATIC_XY_BOX               -1
 
@@ -378,7 +382,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        152
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1123
+#define _APS_NEXT_CONTROL_VALUE         1127
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

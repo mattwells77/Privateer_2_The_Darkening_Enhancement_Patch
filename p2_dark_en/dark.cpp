@@ -59,6 +59,11 @@ BYTE* p_p2_space_struct_joy_buttons = nullptr;
 
 WORD* p_p2_space_struct_exit_flag = nullptr;
 
+BYTE* p_p2_y_axis_orientation = nullptr;
+
+void* p_p2_space_object_type_struct_list = nullptr;
+
+
 void* p_p2_update_joystick_data = nullptr;
 void* p_p2_proccess_joystick_data = nullptr;
 
@@ -230,4 +235,8 @@ void DARK_Setup() {
 	p2_keyboard_state_last = (BYTE*)0x55D4F0;
 
 	p_p2_controller_flags = (BYTE*)0x52E062;
+
+	p_p2_y_axis_orientation = (BYTE*)0x52E063;
+
+	p_p2_space_object_type_struct_list = (void*)0x4C6924;
 }

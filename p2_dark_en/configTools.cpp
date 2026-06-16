@@ -163,6 +163,7 @@ static void ConfigCreate_InGame() {
     ConfigWriteInt_InGame(L"MAIN", L"WIN_DATA", CONFIG_MAIN_WIN_DATA);
 
     ConfigWriteInt_InGame(L"MAIN", L"DEAD_ZONE", CONFIG_MAIN_DEAD_ZONE);
+    ConfigWriteInt_InGame(L"SPACE", L"ALT_FLIGHT_MODE", CONFIG_SPACE_ALT_FLIGHT_MODE);
 }
 
 
@@ -187,7 +188,8 @@ static void ConfigCreate() {
     ConfigWriteInt(L"MAIN", L"CYCLE_HZ_GUI", CONFIG_MAIN_CYCLE_HZ_GUI);
     
     ConfigWriteInt(L"SPACE", L"CYCLE_HZ_SPACE", CONFIG_SPACE_CYCLE_HZ_SPACE);
-
+    
+    ConfigWriteInt(L"SPACE", L"ALT_FLIGHT_MODE", CONFIG_SPACE_ALT_FLIGHT_MODE);
     //ConfigWriteInt(L"SPACE", L"COCKPIT_MAINTAIN_ASPECT_RATIO", CONFIG_SPACE_COCKPIT_MAINTAIN_ASPECT_RATIO);
     //ConfigWriteInt(L"SPACE", L"SPACE_REFRESH_RATE_HZ", CONFIG_SPACE_SPACE_REFRESH_RATE_HZ);
     //ConfigWriteInt(L"SPACE", L"LOD_LEVEL_DISTANCE_MODIFIER", CONFIG_SPACE_LOD_LEVEL_DISTANCE_MODIFIER);
@@ -197,6 +199,9 @@ static void ConfigCreate() {
     ConfigWriteString(L"MOVIES", L"EXT", CONFIG_MOVIES_EXT);
 
     ConfigWriteInt(L"MOUSE", L"DEAD_ZONE", CONFIG_MOUSE_DEAD_ZONE);
+    ConfigWriteInt(L"MOUSE", L"AXIS_LIMIT_PERCENTAGE", CONFIG_MOUSE_AXIS_LIMIT_PERCENTAGE);
+    ConfigWriteInt(L"MOUSE", L"INVERT_Y_AXIS", CONFIG_MOUSE_INVERT_Y_AXIS);
+
     wchar_t profile_name[16];
     for (int i = 0; i < NUM_JOY_PROFILES; i++) {
         switch (i) {

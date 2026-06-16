@@ -86,6 +86,15 @@ extern void* p_p2_email_screen;
 #define SPACE_PC_SHIP_STRUCT_FY_OFFSET  0x12A8 
 #define SPACE_PC_SHIP_STRUCT_FR_OFFSET  0x12AC 
 #define SPACE_PC_SHIP_STRUCT_AFTERBURNER_OFFSET  0x12D0
+
+#define SPACE_PC_SHIP_STRUCT_SHIP_TYPE_VARS  0x11E6 
+#define SPACE_PC_SHIP_STRUCT_CURRENT_TARGET_VARS  0x1216 
+
+#define SPACE_OBJECT_STRUCT_CURRENT_SPEED  0x12B4 
+
+extern void* p_p2_space_object_type_struct_list;
+#define SPACE_OBJECT_TYPE_STRUCT_SIZE  0x48 
+
 extern void* p_p2_space_struct;
 
 extern DWORD* p_p2_space_struct_number_of_objects;//I think this this is the number of objects in space_struct.
@@ -101,6 +110,7 @@ extern BYTE* p_p2_space_struct_joy_buttons;
 
 extern WORD* p_p2_space_struct_exit_flag;
 
+extern BYTE* p_p2_y_axis_orientation;
 
 void p2_update_joystick_data(void* p_space_struct);
 void p2_proccess_joystick_data(void* p_space_struct);
