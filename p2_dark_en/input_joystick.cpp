@@ -60,6 +60,9 @@ struct SIMULATED_KEY_ACTION {
 
 vector<SIMULATED_KEY_ACTION> simulated_keys;
 
+//time vars for dual action button "Joystick_Roll_Modifier"
+LONGLONG target_in_crosshairs_roll_wait_time = 0;
+LONGLONG target_in_crosshairs_roll_duration = 0;
 
 //_______________________
 bool Is_Alt_Flight_Mode() {
@@ -177,7 +180,8 @@ void Simulate_Key_Press(P2_ACTIONS action) {
 		return;
 	case P2_ACTIONS::Joystick_Roll_Modifier:
 		p2_joy_axes.yaw_as_roll = TRUE;
-		p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Select_Target_In_Crosshairs)][0]] |= 0x80;
+		//start timer to test for a quick button click.
+		QueryPerformanceCounter((LARGE_INTEGER*)&target_in_crosshairs_roll_duration);
 		return;
 	default:
 		p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(action)][0]] |= 0x80;
@@ -272,10 +276,15 @@ void Simulate_Key_Release(P2_ACTIONS action) {
 	case P2_ACTIONS::Rotation_Speed_Key:
 		p2_joy_axes.button_mod = FALSE;
 		return;
-	case P2_ACTIONS::Joystick_Roll_Modifier:
+	case P2_ACTIONS::Joystick_Roll_Modifier: {
 		p2_joy_axes.yaw_as_roll = FALSE;
-		p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Select_Target_In_Crosshairs)][0]] = 0x0;
+		LONGLONG time{ 0 };
+		QueryPerformanceCounter((LARGE_INTEGER*)&time);
+		//test for a short click, perform Select_Target_In_Crosshairs action if timer below threshhold.
+		if (time <= target_in_crosshairs_roll_duration + target_in_crosshairs_roll_wait_time)
+			Simulate_Key_Pressed(P2_ACTIONS::Select_Target_In_Crosshairs, 600);
 		return;
+	}
 	default:
 		p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(action)][0]] = 0x0;
 
@@ -1241,6 +1250,8 @@ void JOYSTICKS::Setup() {
 			Debug_Info_Error("RawGameControllerRemoved: controller was not found in list!!!");
 		});
 
+	//initiate time var for Joystick_Roll_Modifier action.
+	target_in_crosshairs_roll_wait_time = (LONGLONG)600 * Frequency.QuadPart / 1000LL;//ms to ticks
 	setup = true;
 };
 
