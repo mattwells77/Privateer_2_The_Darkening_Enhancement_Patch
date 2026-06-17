@@ -97,6 +97,9 @@ void Modifications_No_CD() {
     MemWrite32(0x41B191, 0x52D318, (DWORD)0x4A0223);
     //shift the movie path offset by one to remove the first backslash character, so that "\movies\" becomes "movies\".
     MemWrite32(0x41B1CE, 0x4A021B, 0x4A021C);
+
+    //skip current cd number check
+    MemWrite16(0x422BA9, 0x1375, 0x9090);
 }
 
 
