@@ -35,6 +35,7 @@ using namespace winrt;
 using namespace Windows::Gaming::Input;
 
 bool alt_flt_mode = true;
+bool rotation_speed_key_rev_action = false;
 
 bool controller_enhancements_enabled = false;
 double key_throttle = 1.0f;//stored throttle value controlled by keys.
@@ -63,6 +64,25 @@ vector<SIMULATED_KEY_ACTION> simulated_keys;
 //time vars for dual action button "Joystick_Roll_Modifier"
 LONGLONG target_in_crosshairs_roll_wait_time = 0;
 LONGLONG target_in_crosshairs_roll_duration = 0;
+
+
+//_________________________________________
+bool Is_Rotation_Speed_Key_Reverse_Action() {
+	static bool run_once = false;
+	if (!run_once) {
+		rotation_speed_key_rev_action = ConfigReadInt_InGame(L"SPACE", L"ROTATION_SPEED_KEY_REVERSE_ACTION", CONFIG_SPACE_ROTATION_SPEED_KEY_REVERSE_ACTION);
+		run_once = true;
+	}
+	return rotation_speed_key_rev_action;
+}
+
+
+//______________________________________________________
+void Set_Rotation_Speed_Key_Reverse_Action(bool is_true) {
+	rotation_speed_key_rev_action = is_true;
+	ConfigWriteInt_InGame(L"SPACE", L"ROTATION_SPEED_KEY_REVERSE_ACTION", rotation_speed_key_rev_action);
+}
+
 
 //_______________________
 bool Is_Alt_Flight_Mode() {
@@ -427,8 +447,15 @@ void Update_Axis_Keys() {
 	double button_val = 0.4f;
 	if (current_pro_type == PROFILE_TYPE::GUI) 
 		button_val = 0.2;
-	if (p2_joy_axes.button_mod || p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Rotation_Speed_Key)][0]])
+	else if (Is_Rotation_Speed_Key_Reverse_Action())//flip the action of the rotation speed key modifier when in space.
 		button_val = 1.0f;
+
+	if (p2_joy_axes.button_mod || p2_keyboard_state_main[P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Rotation_Speed_Key)][0]]) {
+		if (current_pro_type != PROFILE_TYPE::GUI && Is_Rotation_Speed_Key_Reverse_Action())//flip the action of the rotation speed key modifier when in space.
+			button_val = 0.4f;
+		else
+			button_val = 1.0f;
+	}
 	if (p2_joy_axes.x_neg || (*keys[1] || *keys[4] || *keys[7]))
 		p2_joy_axes.x -= button_val;
 

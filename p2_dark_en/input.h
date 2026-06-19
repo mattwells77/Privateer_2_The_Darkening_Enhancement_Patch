@@ -722,6 +722,9 @@ void Check_Mouse_Double_Click();
 bool Is_Alt_Flight_Mode();
 void Set_Alt_Flight_Mode(bool is_true);
 
+bool Is_Rotation_Speed_Key_Reverse_Action();
+void Set_Rotation_Speed_Key_Reverse_Action(bool is_true);
+
 extern MOUSE Mouse;
 extern WORD mouse_state_space[3];
 extern bool controller_enhancements_enabled;

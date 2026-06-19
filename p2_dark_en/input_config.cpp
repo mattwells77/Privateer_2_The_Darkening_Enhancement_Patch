@@ -3424,6 +3424,13 @@ static INT_PTR CALLBACK DialogProc_Config_Keys1(HWND hwndDlg, UINT uMsg, WPARAM 
 		SetWindowRedraw(hwnd_mod15, TRUE);
 		SetWindowRedraw(hwnd_mod20, TRUE);
 
+
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_CHECK_REV_SPEED_KEY_SPACE);
+		DWORD checked = BST_UNCHECKED;
+		if (Is_Rotation_Speed_Key_Reverse_Action())
+			checked = BST_CHECKED;
+		SendMessage(hwnd_sub, BM_SETCHECK, (WPARAM)checked, (LPARAM)0);
+
 		break;
 	}
 
@@ -3500,6 +3507,15 @@ static INT_PTR CALLBACK DialogProc_Config_Keys1(HWND hwndDlg, UINT uMsg, WPARAM 
 							P2_ACTIONS_KEYS[static_cast<int>(actions_keys_page01[combo_num])][0] = 0;
 					}
 				}
+			}
+			return TRUE;
+		case IDC_CHECK_REV_SPEED_KEY_SPACE:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				DWORD button_state = (int)(SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0));
+				bool is_speed_key_rev = false;
+				if (button_state & BST_CHECKED)
+					is_speed_key_rev = true;
+				Set_Rotation_Speed_Key_Reverse_Action(is_speed_key_rev);
 			}
 			return TRUE;
 		default:

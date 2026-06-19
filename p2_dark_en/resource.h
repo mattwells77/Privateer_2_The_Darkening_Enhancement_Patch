@@ -370,8 +370,9 @@
 #define IDC_COMBO_KEY_20                1122
 #define IDC_STATIC_INSTRUCTIONS         1122
 #define IDC_CHECK_INVERT_Y_AXIS         1124
-#define IDC_CHECK2                      1126
 #define IDC_CHECK_ALT_FLT_MODE          1126
+#define IDC_CHECK2                      1128
+#define IDC_CHECK_REV_SPEED_KEY_SPACE   1128
 #define IDC_STATIC                      -1
 #define IDC_STATIC_XY_BOX               -1
 
@@ -382,7 +383,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        152
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1127
+#define _APS_NEXT_CONTROL_VALUE         1129
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
