@@ -699,6 +699,7 @@ extern P2_JOY_AXES p2_joy_axes;
 extern JOYSTICKS Joysticks;
 
 bool Get_Joystick_Config_Path(std::wstring* p_ret_string);
+bool Get_Joystick_Config_Path_Local(std::wstring* p_ret_string);
 
 void Simulate_Key_Press(P2_ACTIONS action);
 void Simulate_Key_Release(P2_ACTIONS action);
