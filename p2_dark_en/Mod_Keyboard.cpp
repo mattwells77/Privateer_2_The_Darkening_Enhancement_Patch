@@ -869,6 +869,40 @@ static void __declspec(naked) check_key_state_sc_to_vk(void) {
 }
 
 
+//__________________________________________________________________________________________
+static bool Get_Key_State_Scancode_Ignore_Shift(BYTE key, BYTE mod_key_flags, BYTE run_once) {
+    if (p2_keyboard_state_main[VK_SHIFT] & 0x80)
+        mod_key_flags |= p2_keyboard_state_main[VK_SHIFT] >> 7;
+    return Get_Key_State((BYTE)MapVirtualKeyA(key, MAPVK_VSC_TO_VK), mod_key_flags, run_once);
+}
+
+
+//_______________________________________________________________________
+static void __declspec(naked) check_key_state_sc_to_vk_ignore_shift(void) {
+
+    __asm {
+
+        push ecx
+        push esi
+        push edi
+        push ebp
+
+        push ebx
+        push edx
+        push eax
+        call Get_Key_State_Scancode_Ignore_Shift
+        add esp, 0xC
+
+        pop ebp
+        pop edi
+        pop esi
+        pop ecx
+
+        ret
+    }
+}
+
+
 //___________________________
 void Modifications_KeyBoard() {
 
@@ -1018,7 +1052,7 @@ void Modifications_KeyBoard() {
 
     //In function at 0x43B563 - mostly letters and numbers "BYTE RETURN_PRESSED_KEY_SCANCODE_1_TO_0x53()"
    //Used in Nav Point type selection box, Option Screen +- joystick deadzone, etc.
-    FuncReplace32(0x43B5A3, 0x02EC21, (DWORD)&check_key_state_sc_to_vk);
+    FuncReplace32(0x43B5A3, 0x02EC21, (DWORD)&check_key_state_sc_to_vk_ignore_shift);
 
     //For Debug Screen??
     FuncReplace32(0x43B61C, 0x02EBA8, (DWORD)&check_key_state_sc_to_vk);
