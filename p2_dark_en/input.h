@@ -725,6 +725,9 @@ void Set_Alt_Flight_Mode(bool is_true);
 bool Is_Rotation_Speed_Key_Reverse_Action();
 void Set_Rotation_Speed_Key_Reverse_Action(bool is_true);
 
+//initiate time var for Joystick_Roll_Modifier action.
+void Initiate_Target_In_Crosshairs_Wait_Time();
+
 extern MOUSE Mouse;
 extern WORD mouse_state_space[3];
 extern bool controller_enhancements_enabled;

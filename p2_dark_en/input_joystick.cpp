@@ -66,6 +66,15 @@ LONGLONG target_in_crosshairs_roll_wait_time = 0;
 LONGLONG target_in_crosshairs_roll_duration = 0;
 
 
+//____________________________________________
+void Initiate_Target_In_Crosshairs_Wait_Time() {
+	static bool run_once = false;
+	if (!run_once) {
+		target_in_crosshairs_roll_wait_time = (LONGLONG)300 * Frequency.QuadPart / 1000LL;//ms to ticks
+		run_once = true;
+	}
+}
+
 //_________________________________________
 bool Is_Rotation_Speed_Key_Reverse_Action() {
 	static bool run_once = false;
@@ -324,7 +333,7 @@ void Simulate_Key_Release(P2_ACTIONS action) {
 		QueryPerformanceCounter((LARGE_INTEGER*)&time);
 		//test for a short click, perform Select_Target_In_Crosshairs action if timer below threshhold.
 		if (time <= target_in_crosshairs_roll_duration + target_in_crosshairs_roll_wait_time)
-			Simulate_Key_Pressed(P2_ACTIONS::Select_Target_In_Crosshairs, 600);
+			Simulate_Key_Pressed(P2_ACTIONS::Select_Target_In_Crosshairs, 100);
 		return;
 	}
 	default:
@@ -1299,8 +1308,6 @@ void JOYSTICKS::Setup() {
 			Debug_Info_Error("RawGameControllerRemoved: controller was not found in list!!!");
 		});
 
-	//initiate time var for Joystick_Roll_Modifier action.
-	target_in_crosshairs_roll_wait_time = (LONGLONG)600 * Frequency.QuadPart / 1000LL;//ms to ticks
 	setup = true;
 };
 

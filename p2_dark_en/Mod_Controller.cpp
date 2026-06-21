@@ -101,6 +101,8 @@ static void Original_Joystick_Update() {
 
 //______________________
 static void Joy_Update() {
+	Initiate_Target_In_Crosshairs_Wait_Time();
+	
 	Check_Simulated_Key_For_Release();
 
 	if (controller_enhancements_enabled)
