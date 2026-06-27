@@ -34,7 +34,7 @@ using namespace Windows::Gaming::Input;
 
 HWND hWin_SaveAsPreset = nullptr;
 HWND hWin_Config_Joy = nullptr;
-HWND hWin_Config_Joy_Off = nullptr;
+HWND hWin_Config_Joy_Legacy = nullptr;
 HWND hWin_Config_Joy_Control = nullptr;
 HWND hWin_Config_Control = nullptr;
 HWND hWin_Config_Mouse = nullptr;
@@ -231,6 +231,112 @@ P2_ACTIONS actions_space[]{
 	P2_ACTIONS::ReMap_1,
 	P2_ACTIONS::ReMap_2,
 	P2_ACTIONS::ReMap_3,
+};
+
+
+
+P2_ACTIONS actions_space_legacy[]{
+	P2_ACTIONS::None,
+
+	P2_ACTIONS::Fire_Guns,
+	P2_ACTIONS::Fire_Missile,
+	P2_ACTIONS::Drop_Mine_Decoy,
+
+	P2_ACTIONS::Jump,
+	P2_ACTIONS::Speed_Increase,
+	P2_ACTIONS::Speed_Decrease,
+	P2_ACTIONS::Speed_Zero,
+	P2_ACTIONS::Speed_Max,
+	P2_ACTIONS::Afterburner,
+
+	P2_ACTIONS::Target_Nearest_Hostile,
+	P2_ACTIONS::Target_Nearest_Friendly,
+	P2_ACTIONS::Cycle_Targets_Forward,
+	P2_ACTIONS::Cycle_Targets_Back,
+	P2_ACTIONS::Select_Target_In_Crosshairs,
+	P2_ACTIONS::Match_Target_Speed,
+	P2_ACTIONS::Targeting_Off,
+
+	P2_ACTIONS::Tractor_Targeted_Object,
+	P2_ACTIONS::Drop_Tractored_Object,
+
+	P2_ACTIONS::VDW_Comms,
+	P2_ACTIONS::VDW_Damage,
+	P2_ACTIONS::VDW_Guns,
+	P2_ACTIONS::VDW_Missiles,
+	P2_ACTIONS::VDW_Mines_Decoys,
+
+	P2_ACTIONS::Select_Deselect_Weapon_in_VDW,
+	P2_ACTIONS::Cycle_Weapons_in_VDW,
+
+	P2_ACTIONS::Cycle_Radar_Ranges,
+	P2_ACTIONS::Toggle_Radar_Type,
+
+	P2_ACTIONS::Nav_Map,
+	P2_ACTIONS::Electronic_Diary,
+	P2_ACTIONS::Game_Options,
+	P2_ACTIONS::Hotkey_List,
+
+	P2_ACTIONS::Toggle_Full_No_Guns,
+	P2_ACTIONS::Toggle_SOS,
+	P2_ACTIONS::Drop_Nuke_em,
+	P2_ACTIONS::Activate_BSE,
+	P2_ACTIONS::Warp_Shields,
+
+	P2_ACTIONS::View_Front,
+	P2_ACTIONS::View_Left,
+	P2_ACTIONS::View_Back,
+	P2_ACTIONS::View_Right,
+	P2_ACTIONS::View_Ship,
+	P2_ACTIONS::View_Target_Camera,
+	P2_ACTIONS::View_External,
+	P2_ACTIONS::View_Chase_Target,
+	P2_ACTIONS::View_Fixed,
+	P2_ACTIONS::View_Fly_By_Cinematic,
+
+	//P2_ACTIONS::Exterior_Ship_View_Left,
+	//P2_ACTIONS::Exterior_Ship_View_Right,
+	//P2_ACTIONS::Exterior_Ship_View_Up,
+	//P2_ACTIONS::Exterior_Ship_View_Down,
+
+	P2_ACTIONS::Num_0,
+	P2_ACTIONS::Num_1,
+	P2_ACTIONS::Num_2,
+	P2_ACTIONS::Num_3,
+	P2_ACTIONS::Num_4,
+	P2_ACTIONS::Num_5,
+	P2_ACTIONS::Num_6,
+	P2_ACTIONS::Num_7,
+	P2_ACTIONS::Num_8,
+	P2_ACTIONS::Num_9,
+
+	P2_ACTIONS::Store_Target_0,
+	P2_ACTIONS::Store_Target_1,
+	P2_ACTIONS::Store_Target_2,
+	P2_ACTIONS::Store_Target_3,
+	P2_ACTIONS::Store_Target_4,
+	P2_ACTIONS::Store_Target_5,
+	P2_ACTIONS::Store_Target_6,
+	P2_ACTIONS::Store_Target_7,
+	P2_ACTIONS::Store_Target_8,
+	P2_ACTIONS::Store_Target_9,
+
+	P2_ACTIONS::Pitch_Down,
+	P2_ACTIONS::Pitch_Up,
+	P2_ACTIONS::Yaw_Left,
+	P2_ACTIONS::Yaw_Right,
+
+	P2_ACTIONS::Pitch_Up_Yaw_Left,
+	P2_ACTIONS::Pitch_Up_Yaw_Right,
+	P2_ACTIONS::Pitch_Down_Yaw_Left,
+	P2_ACTIONS::Pitch_Down_Yaw_Right,
+
+	P2_ACTIONS::Roll_Right,
+	P2_ACTIONS::Roll_Left,
+
+	P2_ACTIONS::Rotation_Speed_Key,
+	P2_ACTIONS::Joystick_Roll_Modifier,
+	P2_ACTIONS::Exit_Game,
 };
 
 
@@ -432,6 +538,46 @@ static P2_ACTIONS Get_Action(int position) {
 		actions = actions_gui;
 		actions_count = _countof(actions_gui);
 	}
+	if (position < 0 || position >= actions_count)
+		return P2_ACTIONS::End;
+	return actions[position];
+}
+
+
+//_______________________________________________
+static int Get_Action_Position_Legacy(P2_ACTIONS action, PROFILE_TYPE pro_type) {
+	
+
+	PROFILE_TYPE saved_pro_type = current_pro_type;
+	current_pro_type = pro_type;
+	P2_ACTIONS* actions = actions_space_legacy;
+	int actions_count = _countof(actions_space_legacy);
+	if (current_pro_type == PROFILE_TYPE::GUI) {
+		actions = actions_gui;
+		actions_count = _countof(actions_gui);
+	}
+	current_pro_type = saved_pro_type;
+
+	for (int i = 0; i < actions_count; i++) {
+		if (actions[i] == action)
+			return i;
+	}
+	return -1;
+}
+
+
+//________________________________________
+static P2_ACTIONS Get_Action_Legacy(int position, PROFILE_TYPE pro_type) {
+	
+	PROFILE_TYPE saved_pro_type = current_pro_type;
+	current_pro_type = pro_type;
+	P2_ACTIONS* actions = actions_space_legacy;
+	int actions_count = _countof(actions_space_legacy);
+	if (current_pro_type == PROFILE_TYPE::GUI) {
+		actions = actions_gui;
+		actions_count = _countof(actions_gui);
+	}
+	current_pro_type = saved_pro_type;
 	if (position < 0 || position >= actions_count)
 		return P2_ACTIONS::End;
 	return actions[position];
@@ -642,8 +788,31 @@ const UINT SWITCH_POS_UID[]{
 };
 
 
+//___________________________________________________________________________________________
+static BOOL JoyConfig_Refresh_CurrentAction_Legacy_Joystick(P2_ACTIONS action, BOOL activate) {
+
+	if (!hWin_Config_Joy_Legacy)
+		return FALSE;
+
+	HWND hwnd_sub = GetDlgItem(hWin_Config_Joy_Legacy, IDC_STATIC_CURRENT_ACTION);
+	if (!hwnd_sub)
+		return FALSE;
+
+	UINT UID = P2_ACTION_UID[static_cast<int>(P2_ACTIONS::None)];
+	if (activate)
+		UID = P2_ACTION_UID[static_cast<int>(action)];
+	LoadString(phinstDLL, UID, general_string_buff, _countof(general_string_buff));
+	SendMessage(hwnd_sub, (UINT)WM_SETTEXT, (WPARAM)0, (LPARAM)general_string_buff);
+
+	return TRUE;
+}
+
+
 //____________________________________________________________________
 BOOL JoyConfig_Refresh_CurrentAction(P2_ACTIONS action, BOOL activate) {
+
+	if (JoyConfig_Refresh_CurrentAction_Legacy_Joystick(action, activate))
+		return TRUE;
 
 	if (!hWin_Config_Joy)
 		return FALSE;
@@ -1883,7 +2052,7 @@ static void JoyConfig_Refresh(HWND hwndDlg) {
 	int joy_move_x = (LONG)(16 * p2_joy_axes.x);
 	int joy_move_y = (LONG)(16 * p2_joy_axes.y);
 	int joy_move_r = (LONG)(16 * p2_joy_axes.r);
-	int joy_move_t = (LONG)(100 * p2_joy_axes.t);
+	int joy_move_t = 100 - (LONG)(100 * p2_joy_axes.t);
 
 	int width = rc.right - rc.left - 2 - 9;
 	int height = rc.bottom - rc.top - 2 - 9;
@@ -2429,19 +2598,725 @@ static INT_PTR CALLBACK DialogProc_JoyConfig(HWND hwndDlg, UINT uMsg, WPARAM wPa
 }
 
 
-//_____________________________________________________________________________________________________
-static INT_PTR CALLBACK DialogProc_JoyConfig_Off(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+//________________________________________________________
+//Brings a particular controller state into focus, when it's corresponding button is manipulated.
+static void Legacy_Update_Controller_State_Focus_Buttons() {
 
+	if (!hWin_Config_Joy_Legacy)
+		return;
+
+	static DWORD last_buttons = 0;
+
+	JOYCAPS* caps = Legacy_Joystick.Get_Caps();
+	JOYINFOEX* info = Legacy_Joystick.Get_Info();
+	if (!info)
+		return;
+	
+	if (info->dwButtons == last_buttons)
+		return;
+	Debug_Info("Legacy_Update_Controller_State_Focus %d", info->dwButtons);
+	last_buttons = info->dwButtons;
+	int button = -1;
+	
+	for (int i = 0; i < (int)caps->wNumButtons; i++) {
+		if (info->dwButtons & 1 << i)
+			button = i;
+	}
+	if (button == -1)
+		return;
+
+
+	HWND hwnd_selected_button = nullptr;
+	HWND hwnd_selected_action = nullptr;
+	if (current_pro_type == PROFILE_TYPE::GUI) {
+		hwnd_selected_button = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_BUTTONS_GUI);
+		hwnd_selected_action = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_BUTTON_ACTION_GUI);
+	}
+	else if (current_pro_type == PROFILE_TYPE::Space) {
+		hwnd_selected_button = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_BUTTONS_SPACE);
+		hwnd_selected_action = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_BUTTON_ACTION_SPACE);
+	}
+	if (!hwnd_selected_button || !hwnd_selected_action)
+		return;
+
+
+	SendMessage(hwnd_selected_button, CB_SETCURSEL, (WPARAM)button, (LPARAM)0);
+
+	int button_selected = (int)(SendMessage(hwnd_selected_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+	
+	int action_pos = Get_Action_Position_Legacy(Legacy_Joystick.GetAction_Button(button_selected, current_pro_type), current_pro_type);
+	if (action_pos >= 0)
+		SendMessage(hwnd_selected_action, CB_SETCURSEL, (WPARAM)action_pos, (LPARAM)0);
+
+	SetFocus(hwnd_selected_button);
+}
+
+
+//____________________________________________________
+//Brings a particular controller state into focus, when it's corresponding POV is manipulated.
+static void Legacy_Update_Controller_State_Focus_POV() {
+
+	if (!hWin_Config_Joy_Legacy)
+		return;
+
+	static DWORD last_pov = 0;
+
+	JOYCAPS* caps = Legacy_Joystick.Get_Caps();
+	JOYINFOEX* info = Legacy_Joystick.Get_Info();
+	if (!info)
+		return;
+
+	if (info->dwPOV == last_pov)
+		return;
+	Debug_Info("Legacy_Update_Controller_State_Focus %d", info->dwButtons);
+	last_pov = info->dwPOV;
+
+	int switch_num = 0;
+	switch (info->dwPOV) {
+	case JOY_POVFORWARD:
+		switch_num = 1;
+		break;
+	case JOY_POVLEFT:
+		switch_num = 2;
+		break;
+	case JOY_POVRIGHT:
+		switch_num = 3;
+		break;
+	case JOY_POVBACKWARD:
+		switch_num = 4;
+		break;
+
+	default:
+		break;
+	}
+
+	if (switch_num < 1)
+		return;
+
+	HWND hwnd_selected_pov_pos = nullptr;
+	HWND hwnd_selected_action = nullptr;
+	if (current_pro_type == PROFILE_TYPE::GUI) {
+		hwnd_selected_pov_pos = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_POV_POS_GUI);
+		hwnd_selected_action = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_POV_ACTION_GUI);
+	}
+	else if (current_pro_type == PROFILE_TYPE::Space) {
+		hwnd_selected_pov_pos = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_POV_POS_SPACE);
+		hwnd_selected_action = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_POV_ACTION_SPACE);
+	}
+	if (!hwnd_selected_pov_pos || !hwnd_selected_action)
+		return;
+
+
+	SendMessage(hwnd_selected_pov_pos, CB_SETCURSEL, (WPARAM)switch_num - 1, (LPARAM)0);
+
+	int pos = (int)(SendMessage(hwnd_selected_pov_pos, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+
+	int action_pos = Get_Action_Position_Legacy(Legacy_Joystick.Get_Action_POV(pos + 1, current_pro_type), current_pro_type);
+	if (action_pos >= 0)
+		SendMessage(hwnd_selected_action, CB_SETCURSEL, (WPARAM)action_pos, (LPARAM)0);
+
+	SetFocus(hwnd_selected_pov_pos);
+}
+
+
+
+//____________________________________
+static void JoyConfig_Legacy_Refresh() {
+
+	if (!hWin_Config_Joy_Legacy)
+		return;
+	HWND hwndDlg = hWin_Config_Joy_Legacy;
+	HWND hwnd_sub = nullptr;
+
+	RECT rc{};
+	hwnd_sub = GetDlgItem(hwndDlg, IDC_STATIC_XY_BOX2);
+	GetWindowRect(hwnd_sub, &rc); //get window rect of control relative to screen
+	POINT pt = { rc.left, rc.top }; //new point object using rect x, y
+	ScreenToClient(hwndDlg, &pt); //convert screen co-ords to client based points
+
+	int joy_move_x = (LONG)(16 * p2_joy_axes.x);
+	int joy_move_y = (LONG)(16 * p2_joy_axes.y);
+	int joy_move_r = (LONG)(16 * p2_joy_axes.r);
+	int joy_move_t = 100 - (LONG)(100 * p2_joy_axes.t);
+
+	int width = rc.right - rc.left - 2 - 9;
+	int height = rc.bottom - rc.top - 2 - 9;
+	int pos_x = (int)((float)(joy_move_x + 16) * ((float)width / 32.0f));
+	int pos_y = (int)((float)(joy_move_y + 16) * ((float)height / 32.0f));
+
+	hwnd_sub = GetDlgItem(hwndDlg, IDC_STATIC_XY_CROSS);
+	MoveWindow(hwnd_sub, pt.x + 1 + pos_x, pt.y + 1 + pos_y, 9, 9, TRUE);
+
+	hwnd_sub = GetDlgItem(hwndDlg, IDC_STATIC_ROLL_BOX);
+	GetWindowRect(hwnd_sub, &rc); //get window rect of control relative to screen
+	pt = { rc.left, rc.top }; //new point object using rect x, y
+	ScreenToClient(hwndDlg, &pt); //convert screen co-ords to client based points
+
+	width = rc.right - rc.left - 2 - 3;
+	pos_x = (int)((float)(joy_move_r + 16) * ((float)width / 32.0f));
+	hwnd_sub = GetDlgItem(hwndDlg, IDC_STATIC_ROLL_BAR);
+	MoveWindow(hwnd_sub, pt.x + 1 + pos_x, pt.y + 1, 3, 9, TRUE);
+
+	hwnd_sub = GetDlgItem(hwndDlg, IDC_STATIC_THROTTLE_BOX);
+	GetWindowRect(hwnd_sub, &rc); //get window rect of control relative to screen
+	pt = { rc.left, rc.top }; //new point object using rect x, y
+	ScreenToClient(hwndDlg, &pt); //convert screen co-ords to client based points
+
+	height = rc.bottom - rc.top - 2 - 3;
+	pos_y = (int)((float)joy_move_t * ((float)height / 100.0f));
+	hwnd_sub = GetDlgItem(hwndDlg, IDC_STATIC_THROTTLE_BAR);
+	MoveWindow(hwnd_sub, pt.x + 1, pt.y + 1 + pos_y, 9, 3, TRUE);
+
+	Legacy_Update_Controller_State_Focus_Buttons();
+	Legacy_Update_Controller_State_Focus_POV();
+}
+
+
+
+
+
+//_______________________________________________
+static void Legacy_Joystick_Update_Profile_Vars() {
+
+	if (!hWin_Config_Joy_Legacy)
+		return;
+
+
+	//fill action selection lists.
+	HWND hwnd_button_gui = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_BUTTON_ACTION_GUI);
+	SendMessage(hwnd_button_gui, CB_RESETCONTENT, (WPARAM)0, (LPARAM)0);
+	HWND hwnd_button_space = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_BUTTON_ACTION_SPACE);
+	SendMessage(hwnd_button_space, CB_RESETCONTENT, (WPARAM)0, (LPARAM)0);
+
+	HWND hwnd_button_pov_gui = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_POV_ACTION_GUI);
+	SendMessage(hwnd_button_pov_gui, CB_RESETCONTENT, (WPARAM)0, (LPARAM)0);
+	HWND hwnd_button_pov_space = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_POV_ACTION_SPACE);
+	SendMessage(hwnd_button_pov_space, CB_RESETCONTENT, (WPARAM)0, (LPARAM)0);
+
+	int actions_count_space = _countof(actions_space_legacy);
+	int	actions_count_gui = _countof(actions_gui);
+
+
+	//speed up combobox initialization by preventing drawing while adding strings.
+	SetWindowRedraw(hwnd_button_gui, FALSE);
+	SetWindowRedraw(hwnd_button_space, FALSE);
+
+	SetWindowRedraw(hwnd_button_pov_gui, FALSE);
+	SetWindowRedraw(hwnd_button_pov_space, FALSE);
+
+	//speed up combobox initialization by setting the count and estimated memory usage first. 
+	SendMessage(hwnd_button_gui, CB_INITSTORAGE, actions_count_gui, sizeof(general_string_buff) * actions_count_gui);
+	SendMessage(hwnd_button_space, CB_INITSTORAGE, actions_count_space, sizeof(general_string_buff) * actions_count_space);
+
+	SendMessage(hwnd_button_pov_gui, CB_INITSTORAGE, actions_count_gui, sizeof(general_string_buff) * actions_count_gui);
+	SendMessage(hwnd_button_pov_space, CB_INITSTORAGE, actions_count_space, sizeof(general_string_buff) * actions_count_space);
+
+	for (int i = 0; i < actions_count_gui; i++) {
+		LoadString(phinstDLL, P2_ACTION_UID[static_cast<int>(actions_gui[i])], general_string_buff, _countof(general_string_buff));
+		SendMessage(hwnd_button_gui, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+		SendMessage(hwnd_button_pov_gui, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+	}
+
+	for (int i = 0; i < actions_count_space; i++) {
+		LoadString(phinstDLL, P2_ACTION_UID[static_cast<int>(actions_space_legacy[i])], general_string_buff, _countof(general_string_buff));
+		SendMessage(hwnd_button_space, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+		SendMessage(hwnd_button_pov_space, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+	}
+
+
+	SetWindowRedraw(hwnd_button_gui, TRUE);
+	SetWindowRedraw(hwnd_button_space, TRUE);
+
+	SetWindowRedraw(hwnd_button_pov_gui, TRUE);
+	SetWindowRedraw(hwnd_button_pov_space, TRUE);
+
+	HWND hwnd_button = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_BUTTONS_GUI);
+	int button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+	int action_pos = Get_Action_Position_Legacy(Legacy_Joystick.GetAction_Button(button_selected, PROFILE_TYPE::GUI), PROFILE_TYPE::GUI);
+	if (action_pos >= 0)
+		SendMessage(hwnd_button_gui, CB_SETCURSEL, (WPARAM)action_pos, (LPARAM)0);
+
+	hwnd_button = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_BUTTONS_SPACE);
+	button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+	action_pos = Get_Action_Position_Legacy(Legacy_Joystick.GetAction_Button(button_selected, PROFILE_TYPE::Space), PROFILE_TYPE::Space);
+	if (action_pos >= 0)
+		SendMessage(hwnd_button_space, CB_SETCURSEL, (WPARAM)action_pos, (LPARAM)0);
+
+
+	hwnd_button = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_POV_POS_GUI);
+	button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+	action_pos = Get_Action_Position_Legacy(Legacy_Joystick.Get_Action_POV(button_selected + 1, PROFILE_TYPE::GUI), PROFILE_TYPE::GUI);
+	if (action_pos >= 0)
+		SendMessage(hwnd_button_pov_gui, CB_SETCURSEL, (WPARAM)action_pos, (LPARAM)0);
+
+	hwnd_button = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_SELECT_POV_POS_SPACE);
+	button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+	action_pos = Get_Action_Position_Legacy(Legacy_Joystick.Get_Action_POV(button_selected + 1, PROFILE_TYPE::Space), PROFILE_TYPE::Space);
+	if (action_pos >= 0)
+		SendMessage(hwnd_button_pov_space, CB_SETCURSEL, (WPARAM)action_pos, (LPARAM)0);
+}
+
+
+const UINT LEGACY_JOY_AXES_UID[]{
+	IDS_NONE,
+	IDS_AXIS_LEGACY_01,
+	IDS_AXIS_LEGACY_02,
+	IDS_AXIS_LEGACY_03,
+	IDS_AXIS_LEGACY_04,
+	IDS_AXIS_LEGACY_05,
+	IDS_AXIS_LEGACY_06,
+};
+
+
+const UINT LEGACY_JOY_POV_UID[]{
+	IDS_POV_LEGACY_01,
+	IDS_POV_LEGACY_02,
+	IDS_POV_LEGACY_03,
+	IDS_POV_LEGACY_04,
+};
+
+
+//_____________________________________________________________________________________________________________
+static int Get_Legacy_Axis_List_Position(LEGACY_JOY_AXIS axis, LEGACY_JOY_AXIS* axis_list, int axis_list_count) {
+
+
+	for (int i = 0; i < axis_list_count; i++) {
+		if (axis_list[i] == axis)
+			return i;
+	}
+	return 0;
+}
+
+
+//________________________________________________________________________________________________________
+static INT_PTR CALLBACK DialogProc_JoyConfig_Legacy(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+
+	static LEGACY_JOY_AXIS* p_axes = nullptr;
+	static int num_axes = 0;
 	switch (uMsg) {
 	case WM_INITDIALOG: {
 
 		InitCommonControls();
 
-		hWin_Config_Joy_Off = hwndDlg;
+		hWin_Config_Joy_Legacy = hwndDlg;
+
+		HWND hwnd_sub = nullptr;
+		RECT rc{};
+		POINT pt{};
+
+		//set size of roll box
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_STATIC_ROLL_BOX);
+		GetWindowRect(hwnd_sub, &rc);
+		pt = { rc.left, rc.top };
+		ScreenToClient(hwndDlg, &pt);
+		MoveWindow(hwnd_sub, pt.x, pt.y, rc.right - rc.left, 9 + 2, TRUE);
+		//set size of throttle box
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_STATIC_THROTTLE_BOX);
+		GetWindowRect(hwnd_sub, &rc);
+		pt = { rc.left, rc.top };
+		ScreenToClient(hwndDlg, &pt);
+		MoveWindow(hwnd_sub, pt.x, pt.y, 9 + 2, rc.bottom - rc.top, TRUE);
+
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_COMBO_DEAD_ZONE);
+
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.0000");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.0125");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.0250");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.0375");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.0500");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.0625");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.0750");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.0875");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.1000");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.1125");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.1250");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.1375");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.1500");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.1625");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.1750");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.1875");
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)L"0.2000");
+
+		SendMessage(hwnd_sub, CB_SETCURSEL, (WPARAM)(int)(*(float*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_DEAD_ZONE) / 0.0125f), (LPARAM)0);
+
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_CHECK_INVERT_Y_AXIS);
+		DWORD checked = BST_UNCHECKED;
+		if (*p_p2_y_axis_orientation)
+			checked = BST_CHECKED;
+		SendMessage(hwnd_sub, BM_SETCHECK, (WPARAM)checked, (LPARAM)0);
+
+
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_CHECK_REV_AXIS_X);
+		checked = BST_UNCHECKED;
+		if (Legacy_Joystick.Is_PointerX_Axis_Reversed())
+			checked = BST_CHECKED;
+		SendMessage(hwnd_sub, BM_SETCHECK, (WPARAM)checked, (LPARAM)0);
+
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_CHECK_REV_AXIS_Y);
+		checked = BST_UNCHECKED;
+		if (Legacy_Joystick.Is_PointerY_Axis_Reversed())
+			checked = BST_CHECKED;
+		SendMessage(hwnd_sub, BM_SETCHECK, (WPARAM)checked, (LPARAM)0);
+
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_CHECK_REV_AXIS_YAW);
+		checked = BST_UNCHECKED;
+		if (Legacy_Joystick.Is_Yaw_Axis_Reversed())
+			checked = BST_CHECKED;
+		SendMessage(hwnd_sub, BM_SETCHECK, (WPARAM)checked, (LPARAM)0);
+
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_CHECK_REV_AXIS_PITCH);
+		checked = BST_UNCHECKED;
+		if (Legacy_Joystick.Is_Pitch_Axis_Reversed())
+			checked = BST_CHECKED;
+		SendMessage(hwnd_sub, BM_SETCHECK, (WPARAM)checked, (LPARAM)0);
+
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_CHECK_REV_AXIS_ROLL);
+		checked = BST_UNCHECKED;
+		if (Legacy_Joystick.Is_Roll_Axis_Reversed())
+			checked = BST_CHECKED;
+		SendMessage(hwnd_sub, BM_SETCHECK, (WPARAM)checked, (LPARAM)0);
+
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_CHECK_REV_AXIS_THROTTLE);
+		checked = BST_UNCHECKED;
+		if (Legacy_Joystick.Is_Throttle_Axis_Reversed())
+			checked = BST_CHECKED;
+		SendMessage(hwnd_sub, BM_SETCHECK, (WPARAM)checked, (LPARAM)0);
+
+		HWND hwnd_sub_gui = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_BUTTONS_GUI);
+		HWND hwnd_sub_space = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_BUTTONS_SPACE);
+		wchar_t* msg = new wchar_t[12];
+		LoadString(phinstDLL, IDS_BUTTON, general_string_buff, _countof(general_string_buff));
+
+		JOYCAPS* caps = Legacy_Joystick.Get_Caps();
+		
+		for (int i = 0; i < (int)caps->wNumButtons; i++) {
+			swprintf_s(msg, 12, L"%s %d", general_string_buff, i + 1);
+			SendMessage(hwnd_sub_gui, CB_ADDSTRING, (WPARAM)0, (LPARAM)msg);
+			SendMessage(hwnd_sub_space, CB_ADDSTRING, (WPARAM)0, (LPARAM)msg);
+		}
+		delete[] msg;
+		SendMessage(hwnd_sub_gui, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+		SendMessage(hwnd_sub_space, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+
+
+		num_axes = (int)caps->wNumAxes + 1;
+		p_axes = new LEGACY_JOY_AXIS[num_axes];
+		p_axes[0] = LEGACY_JOY_AXIS::None;
+		
+		int i = 1;
+		for (int a = 1; a < 6; a++) {
+			if (Legacy_Joystick.Is_Axes(static_cast<LEGACY_JOY_AXIS>(a))) {
+				if (i < num_axes)
+					p_axes[i] = static_cast<LEGACY_JOY_AXIS>(a);
+				i++;
+			}
+		}
+
+		HWND hwnd_x = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_X);
+		HWND hwnd_y = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_Y);
+
+		HWND hwnd_yaw = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_YAW);
+		HWND hwnd_pitch = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_PITCH);
+		HWND hwnd_roll = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_ROLL);
+		HWND hwnd_throttle = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_THROTTLE);
+
+		for (int i = 0; i < num_axes; i++) {
+			LoadString(phinstDLL, LEGACY_JOY_AXES_UID[static_cast<int>(p_axes[i])], general_string_buff, _countof(general_string_buff));
+			SendMessage(hwnd_x, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+			SendMessage(hwnd_y, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+			SendMessage(hwnd_yaw, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+			SendMessage(hwnd_pitch, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+			SendMessage(hwnd_roll, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+			SendMessage(hwnd_throttle, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+		}
+		SendMessage(hwnd_x, CB_SETCURSEL, (WPARAM)Get_Legacy_Axis_List_Position(Legacy_Joystick.PointerX_Axis(), p_axes, num_axes), (LPARAM)0);
+		SendMessage(hwnd_y, CB_SETCURSEL, (WPARAM)Get_Legacy_Axis_List_Position(Legacy_Joystick.PointerY_Axis(), p_axes, num_axes), (LPARAM)0);
+		SendMessage(hwnd_yaw, CB_SETCURSEL, (WPARAM)Get_Legacy_Axis_List_Position(Legacy_Joystick.Yaw_Axis(), p_axes, num_axes), (LPARAM)0);
+		SendMessage(hwnd_pitch, CB_SETCURSEL, (WPARAM)Get_Legacy_Axis_List_Position(Legacy_Joystick.Pitch_Axis(), p_axes, num_axes), (LPARAM)0);
+		SendMessage(hwnd_roll, CB_SETCURSEL, (WPARAM)Get_Legacy_Axis_List_Position(Legacy_Joystick.Roll_Axis(), p_axes, num_axes), (LPARAM)0);
+		SendMessage(hwnd_throttle, CB_SETCURSEL, (WPARAM)Get_Legacy_Axis_List_Position(Legacy_Joystick.Throttle_Axis(), p_axes, num_axes), (LPARAM)0);
+
+		//IDC_COMBO_CURRENT_PROFILE
+		hwnd_sub = GetDlgItem(hwndDlg, IDC_COMBO_CURRENT_PROFILE);
+		LoadString(phinstDLL, IDS_TAB_GUI, general_string_buff, _countof(general_string_buff));
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+		LoadString(phinstDLL, IDS_TAB_SPACE, general_string_buff, _countof(general_string_buff));
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+
+		if (current_pro_type != PROFILE_TYPE::GUI && current_pro_type != PROFILE_TYPE::Space)
+			current_pro_type = PROFILE_TYPE::Space;
+		SendMessage(hwnd_sub, CB_SETCURSEL, (WPARAM)static_cast<int>(current_pro_type), (LPARAM)0);
+
+
+
+		ACTION_SWITCH* pov = Legacy_Joystick.Get_POV();
+		HWND hwnd_pov_gui = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_POS_GUI);
+		HWND hwnd_pov_space = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_POS_SPACE);
+		if (pov) {
+			for (int i = 0; i < _countof(LEGACY_JOY_POV_UID); i++) {
+				LoadString(phinstDLL, LEGACY_JOY_POV_UID[i], general_string_buff, _countof(general_string_buff));
+				SendMessage(hwnd_pov_gui, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+				SendMessage(hwnd_pov_space, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+			}
+		}
+		else {
+			LoadString(phinstDLL, IDS_NONE, general_string_buff, _countof(general_string_buff));
+			SendMessage(hwnd_pov_gui, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+			SendMessage(hwnd_pov_space, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+		}
+		SendMessage(hwnd_pov_gui, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+		SendMessage(hwnd_pov_space, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+		if (!pov) {
+			EnableWindow(hwnd_pov_gui, FALSE);
+			EnableWindow(hwnd_pov_space, FALSE);
+			HWND hwnd_pov_gui = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_ACTION_GUI);
+			HWND hwnd_pov_space = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_ACTION_SPACE);
+			EnableWindow(hwnd_pov_gui, FALSE);
+			EnableWindow(hwnd_pov_space, FALSE);
+		}
+
+		Legacy_Joystick_Update_Profile_Vars();
+
 		return TRUE;
 	}
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+
+		case IDC_COMBO_DEAD_ZONE:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				int deadzone = (int)(SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_DEAD_ZONE), CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				*(float*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_DEAD_ZONE) = 0.0125f * deadzone;
+			}
+			return TRUE;
+		
+		/*case IDC_BUTTON_GAME_CONTROLLERS_SETUP: {
+
+			wchar_t cmd[] = L"control.exe Joy.cpl";
+			STARTUPINFO info = { sizeof(info) };
+			PROCESS_INFORMATION processInfo;
+			if (CreateProcess(nullptr, cmd, NULL, NULL, TRUE, 0, NULL, NULL, &info, &processInfo))
+			{
+				WaitForSingleObject(processInfo.hProcess, INFINITE);
+				CloseHandle(processInfo.hProcess);
+				CloseHandle(processInfo.hThread);
+			}
+
+			return TRUE;
+		}*/
+		case IDC_BUTTON_CENTRE_ALL:
+			Legacy_Joystick.Centre_Axes();
+			return TRUE;
+		case IDC_CHECK_INVERT_Y_AXIS:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				DWORD button_state = (int)(SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0));
+				bool is_y_axis_inverted = false;
+				if (button_state & BST_CHECKED)
+					is_y_axis_inverted = true;
+				*p_p2_y_axis_orientation = is_y_axis_inverted;
+			}
+			return TRUE;
+
+		case IDC_CHECK_REV_AXIS_X:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				DWORD button_state = (int)(SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0));
+				BOOL is_axis_rev = FALSE;
+				if (button_state & BST_CHECKED)
+					is_axis_rev = TRUE;
+				Legacy_Joystick.Set_PointerX_Axis_Reversed(is_axis_rev);
+			}
+			return TRUE;
+		case IDC_CHECK_REV_AXIS_Y:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				DWORD button_state = (int)(SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0));
+				BOOL is_axis_rev = FALSE;
+				if (button_state & BST_CHECKED)
+					is_axis_rev = TRUE;
+				Legacy_Joystick.Set_PointerY_Axis_Reversed(is_axis_rev);
+			}
+			return TRUE;
+		case IDC_CHECK_REV_AXIS_YAW:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				DWORD button_state = (int)(SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0));
+				BOOL is_axis_rev = FALSE;
+				if (button_state & BST_CHECKED)
+					is_axis_rev = TRUE;
+				Legacy_Joystick.Set_Yaw_Axis_Reversed(is_axis_rev);
+			}
+			return TRUE;
+		case IDC_CHECK_REV_AXIS_PITCH:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				DWORD button_state = (int)(SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0));
+				BOOL is_axis_rev = FALSE;
+				if (button_state & BST_CHECKED)
+					is_axis_rev = TRUE;
+				Legacy_Joystick.Set_Pitch_Axis_Reversed(is_axis_rev);
+			}
+			return TRUE;
+		case IDC_CHECK_REV_AXIS_ROLL:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				DWORD button_state = (int)(SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0));
+				BOOL is_axis_rev = FALSE;
+				if (button_state & BST_CHECKED)
+					is_axis_rev = TRUE;
+				Legacy_Joystick.Set_Roll_Axis_Reversed(is_axis_rev);
+			}
+			return TRUE;
+		case IDC_CHECK_REV_AXIS_THROTTLE:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				DWORD button_state = (int)(SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0));
+				BOOL is_axis_rev = FALSE;
+				if (button_state & BST_CHECKED)
+					is_axis_rev = TRUE;
+				Legacy_Joystick.Set_Throttle_Axis_Reversed(is_axis_rev);
+			}
+			return TRUE;
+		case IDC_COMBO_SELECT_BUTTONS_GUI:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_BUTTONS_GUI);
+				int button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				HWND hwnd_actions = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_BUTTON_ACTION_GUI);
+				int action_pos = Get_Action_Position_Legacy(Legacy_Joystick.GetAction_Button(button_selected, PROFILE_TYPE::GUI), PROFILE_TYPE::GUI);
+				if (action_pos >= 0)
+					SendMessage(hwnd_actions, CB_SETCURSEL, (WPARAM)action_pos, (LPARAM)0);
+			}
+			return TRUE;
+		case IDC_COMBO_SELECT_BUTTON_ACTION_GUI:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_BUTTONS_GUI);
+				int button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				HWND hwnd_action = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_BUTTON_ACTION_GUI);
+				P2_ACTIONS action_selected = Get_Action_Legacy((SendMessage(hwnd_action, CB_GETCURSEL, (WPARAM)0, (LPARAM)0)), PROFILE_TYPE::GUI);
+				if (action_selected != P2_ACTIONS::End)
+					Legacy_Joystick.SetAction_Button(button_selected, action_selected, PROFILE_TYPE::GUI);
+			}
+			return TRUE;
+		case IDC_COMBO_SELECT_BUTTONS_SPACE:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_BUTTONS_SPACE);
+				int button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				HWND hwnd_actions = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_BUTTON_ACTION_SPACE);
+				int action_pos = Get_Action_Position_Legacy(Legacy_Joystick.GetAction_Button(button_selected, PROFILE_TYPE::Space), PROFILE_TYPE::Space);
+				if (action_pos >= 0)
+					SendMessage(hwnd_actions, CB_SETCURSEL, (WPARAM)action_pos, (LPARAM)0);
+			}
+			return TRUE;
+		case IDC_COMBO_SELECT_BUTTON_ACTION_SPACE:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_BUTTONS_SPACE);
+				int button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				HWND hwnd_action = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_BUTTON_ACTION_SPACE);
+				P2_ACTIONS action_selected = Get_Action_Legacy((SendMessage(hwnd_action, CB_GETCURSEL, (WPARAM)0, (LPARAM)0)), PROFILE_TYPE::Space);
+				if (action_selected != P2_ACTIONS::End)
+					Legacy_Joystick.SetAction_Button(button_selected, action_selected, PROFILE_TYPE::Space);
+			}
+			return TRUE;
+
+		case IDC_COMBO_SELECT_POV_POS_GUI:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_POS_GUI);
+				int button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				HWND hwnd_actions = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_ACTION_GUI);
+				int action_pos = Get_Action_Position_Legacy(Legacy_Joystick.Get_Action_POV(button_selected + 1, PROFILE_TYPE::GUI), PROFILE_TYPE::GUI);
+				if (action_pos >= 0)
+					SendMessage(hwnd_actions, CB_SETCURSEL, (WPARAM)action_pos, (LPARAM)0);
+			}
+			return TRUE;
+		case IDC_COMBO_SELECT_POV_ACTION_GUI:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_POS_GUI);
+				int button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				HWND hwnd_action = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_ACTION_GUI);
+				P2_ACTIONS action_selected = Get_Action_Legacy((SendMessage(hwnd_action, CB_GETCURSEL, (WPARAM)0, (LPARAM)0)), PROFILE_TYPE::GUI);
+				if (action_selected != P2_ACTIONS::End)
+					Legacy_Joystick.Set_Action_POV(button_selected + 1, action_selected, PROFILE_TYPE::GUI);
+			}
+			return TRUE;
+		case IDC_COMBO_SELECT_POV_POS_SPACE:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_POS_SPACE);
+				int button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				HWND hwnd_actions = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_ACTION_SPACE);
+				int action_pos = Get_Action_Position_Legacy(Legacy_Joystick.Get_Action_POV(button_selected + 1, PROFILE_TYPE::Space), PROFILE_TYPE::Space);
+				if (action_pos >= 0)
+					SendMessage(hwnd_actions, CB_SETCURSEL, (WPARAM)action_pos, (LPARAM)0);
+			}
+			return TRUE;
+		case IDC_COMBO_SELECT_POV_ACTION_SPACE:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_POS_SPACE);
+				int button_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				HWND hwnd_action = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_POV_ACTION_SPACE);
+				P2_ACTIONS action_selected = Get_Action_Legacy((SendMessage(hwnd_action, CB_GETCURSEL, (WPARAM)0, (LPARAM)0)), PROFILE_TYPE::Space);
+				if (action_selected != P2_ACTIONS::End)
+					Legacy_Joystick.Set_Action_POV(button_selected + 1, action_selected, PROFILE_TYPE::Space);
+			}
+			return TRUE;
+			
+		case IDC_COMBO_SELECT_AXIS_X:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_X);
+				int axis_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				if(axis_selected< num_axes)
+					Legacy_Joystick.Set_PointerX_Axis(p_axes[axis_selected]);
+			}
+			return TRUE;
+		case IDC_COMBO_SELECT_AXIS_Y:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_Y);
+				int axis_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				if (axis_selected < num_axes)
+					Legacy_Joystick.Set_PointerY_Axis(p_axes[axis_selected]);
+			}
+			return TRUE;
+
+
+		case IDC_COMBO_SELECT_AXIS_YAW:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_YAW);
+				int axis_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				if (axis_selected < num_axes)
+					Legacy_Joystick.Set_Yaw_Axis(p_axes[axis_selected]);
+			}
+			return TRUE;
+		case IDC_COMBO_SELECT_AXIS_PITCH:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_PITCH);
+				int axis_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				if (axis_selected < num_axes)
+					Legacy_Joystick.Set_Pitch_Axis(p_axes[axis_selected]);
+			}
+			return TRUE;
+		case IDC_COMBO_SELECT_AXIS_ROLL:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_ROLL);
+				int axis_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				if (axis_selected < num_axes)
+					Legacy_Joystick.Set_Roll_Axis(p_axes[axis_selected]);
+			}
+			return TRUE;
+		case IDC_COMBO_SELECT_AXIS_THROTTLE:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd_button = GetDlgItem(hwndDlg, IDC_COMBO_SELECT_AXIS_THROTTLE);
+				int axis_selected = (int)(SendMessage(hwnd_button, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				if (axis_selected < num_axes)
+					Legacy_Joystick.Set_Throttle_Axis(p_axes[axis_selected]);
+			}
+			return TRUE;
+		case IDC_COMBO_CURRENT_PROFILE:
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				HWND hwnd = GetDlgItem(hwndDlg, IDC_COMBO_CURRENT_PROFILE);
+				int pro_type = (int)(SendMessage(hwnd, CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
+				current_pro_type = static_cast<PROFILE_TYPE>(pro_type);
+			}
+			return TRUE;
+		default:
+			break;
+		}
+		break;
 	case WM_DESTROY: {
-		hWin_Config_Joy_Off = nullptr;
+		hWin_Config_Joy_Legacy = nullptr;
+		if (p_axes)
+			delete[] p_axes;
 		return FALSE;
 	}
 	default:
@@ -3939,8 +4814,8 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 			hWin_Config_Joy_Active = hWin_Config_Joy;
 		}
 		else {
-			hWin_Config_Joy_Off = CreateDialogParam(phinstDLL, MAKEINTRESOURCE(IDD_DIALOG_CONFIG_JOY_OFF), hwndDlg, &DialogProc_JoyConfig_Off, 0);
-			hWin_Config_Joy_Active = hWin_Config_Joy_Off;
+			hWin_Config_Joy_Legacy = CreateDialogParam(phinstDLL, MAKEINTRESOURCE(IDD_DIALOG_CONFIG_JOY_OFF), hwndDlg, &DialogProc_JoyConfig_Legacy, 0);
+			hWin_Config_Joy_Active = hWin_Config_Joy_Legacy;
 		}
 		hWin_Config_Mouse = CreateDialogParam(phinstDLL, MAKEINTRESOURCE(IDD_DIALOG_CONFIG_MOUSE), hwndDlg, &DialogProc_Config_Mouse, 0);
 
@@ -3959,7 +4834,8 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 		//SetWindowPos(hWin_Config_Keys2, nullptr, rcTab.left, rcTab.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 
 		//set initial focus tab.
-		if (controller_enhancements_enabled && *p_p2_controller_flags) {
+		//if (controller_enhancements_enabled && *p_p2_controller_flags) {
+		if (*p_p2_controller_flags) {
 			TabCtrl_SetCurFocus(hwndTab, 0);
 			ShowWindow(hWin_Config_Joy_Active, SW_SHOW);
 			ShowWindow(hWin_Config_Mouse, SW_HIDE);
@@ -3988,12 +4864,26 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 			//if (!controller_enhancements_enabled && tabNum == 0) 
 			//	TabCtrl_SetCurFocus(hwndTab, 1);
 			if (tabNum == 0) {
+				if (hWin_Config_Joy_Active == hWin_Config_Joy_Legacy) {
+					HWND hwnd_sub = GetDlgItem(hWin_Config_Joy_Legacy, IDC_COMBO_CURRENT_PROFILE);
+					if (current_pro_type != PROFILE_TYPE::GUI && current_pro_type != PROFILE_TYPE::Space)
+						current_pro_type = PROFILE_TYPE::Space;
+					SendMessage(hwnd_sub, CB_SETCURSEL, (WPARAM)static_cast<int>(current_pro_type), (LPARAM)0);
+				}
+				else {
+					HWND hwndTab = GetDlgItem(hWin_Config_Joy_Active, IDC_TAB_JOY_CONTROL);
+					TabCtrl_SetCurFocus(hwndTab, input_protype_tab_list[static_cast<int>(current_pro_type)]);
+				}
 				ShowWindow(hWin_Config_Joy_Active, SW_SHOW);
 				ShowWindow(hWin_Config_Mouse, SW_HIDE);
 				ShowWindow(hWin_Config_Keys1, SW_HIDE);
 				ShowWindow(hWin_Config_Keys2, SW_HIDE);
+
 			}
 			else if (tabNum == 1) {
+				HWND hwndTab = GetDlgItem(hWin_Config_Mouse, IDC_TAB_MOUSE_CONTROL);
+				TabCtrl_SetCurFocus(hwndTab, input_protype_tab_list[static_cast<int>(current_pro_type)]);
+
 				ShowWindow(hWin_Config_Joy_Active, SW_HIDE);
 				ShowWindow(hWin_Config_Mouse, SW_SHOW);
 				ShowWindow(hWin_Config_Keys1, SW_HIDE);
@@ -4054,6 +4944,8 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 		case IDOK: {
 			if (controller_enhancements_enabled)
 				Joysticks.Save();
+			else
+				Legacy_Joystick.Save();
 			Mouse.Save();
 			Keys_Save();
 			EnableWindow(hwndParent, TRUE);
@@ -4063,6 +4955,8 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 		case IDCANCEL: {
 			if (controller_enhancements_enabled)
 				Joysticks.Load();
+			else
+				Legacy_Joystick.Load();
 			Mouse.Load();
 			Keys_Load();
 			EnableWindow(hwndParent, TRUE);
@@ -4085,6 +4979,8 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 	case WM_CLOSE:
 		if (controller_enhancements_enabled)
 			Joysticks.Load();
+		else
+			Legacy_Joystick.Load();
 		Mouse.Load();
 		Keys_Load();
 		EnableWindow(hwndParent, TRUE);
@@ -4152,9 +5048,15 @@ BOOL JoyConfig_Main() {
 				DispatchMessage(&message);
 			}
 		}
-		Joysticks.Update();
-		if (hWin_Config_Joy)
-			JoyConfig_Refresh(hWin_Config_Joy);
+		if (controller_enhancements_enabled) {
+			Joysticks.Update();
+			if (hWin_Config_Joy)
+				JoyConfig_Refresh(hWin_Config_Joy);
+		}
+		else {
+			Legacy_Joystick.Update();
+			JoyConfig_Legacy_Refresh();
+		}
 	}
 
 	current_num_axes = 0;

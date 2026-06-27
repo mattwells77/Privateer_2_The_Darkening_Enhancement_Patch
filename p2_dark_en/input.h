@@ -266,6 +266,16 @@ enum class SWITCH_POS {
 };
 
 
+enum class LEGACY_JOY_AXIS {
+	None,
+	X,
+	Y,
+	Z,
+	R,
+	U,
+	V,
+};
+
 //____________________
 class ACTION_KEY_MOUSE {
 public:
@@ -669,6 +679,136 @@ private:
 };
 
 
+class LEGACY_JOY {
+public:
+	LEGACY_JOY() {
+		setup = false;
+		caps = nullptr;
+		info = nullptr;
+		buttons = nullptr;
+		pov = nullptr;
+		centre_x = 0;
+		centre_y = 0;
+		centre_z = 0;
+		centre_r = 0;
+		centre_u = 0;
+		centre_v = 0;
+
+		axis_gui_x = LEGACY_JOY_AXIS::None;
+		axis_gui_y = LEGACY_JOY_AXIS::None;
+
+		axis_space_x = LEGACY_JOY_AXIS::None;
+		axis_space_y = LEGACY_JOY_AXIS::None;
+		axis_space_t = LEGACY_JOY_AXIS::None;
+		axis_space_r = LEGACY_JOY_AXIS::None;
+
+		rev_axis_px = FALSE;
+		rev_axis_py = FALSE;
+
+		rev_axis_x = FALSE;
+		rev_axis_y = FALSE;
+		rev_axis_r = FALSE;
+		rev_axis_t = FALSE;
+	};
+	~LEGACY_JOY() {
+		if (caps)
+			delete caps;
+		caps = nullptr;
+		if (info)
+			delete info;
+		info = nullptr;
+		if (buttons)
+			delete[] buttons;
+		buttons = nullptr;
+		if (pov)
+			delete pov;
+		pov = nullptr;
+	}
+	void Setup();
+	void Load();
+	void Save();
+	void Centre_Axes();
+	void Update();
+	JOYCAPS* Get_Caps();
+	JOYINFOEX* Get_Info();
+
+	P2_ACTIONS GetAction_Button(int button, PROFILE_TYPE pro_type);
+	void SetAction_Button(int button, P2_ACTIONS action, PROFILE_TYPE pro_type);
+
+	P2_ACTIONS Get_Action_POV(int pos, PROFILE_TYPE pro_type);
+	void Set_Action_POV(int pos, P2_ACTIONS action, PROFILE_TYPE pro_type);
+
+	BOOL Get_Axis_Vars(LEGACY_JOY_AXIS lja, DWORD* p_centre, DWORD* p_min, DWORD* p_max, DWORD* p_pos);
+	BOOL Is_Axes(LEGACY_JOY_AXIS axis);
+
+	LEGACY_JOY_AXIS PointerX_Axis() const { return axis_gui_x; };
+	LEGACY_JOY_AXIS PointerY_Axis() const { return axis_gui_y; };
+
+	LEGACY_JOY_AXIS Yaw_Axis() const { return axis_space_x; };
+	LEGACY_JOY_AXIS Pitch_Axis() const { return axis_space_y; };
+	LEGACY_JOY_AXIS Roll_Axis() const { return axis_space_r; };
+	LEGACY_JOY_AXIS Throttle_Axis() const { return axis_space_t; };
+
+	void Set_PointerX_Axis(LEGACY_JOY_AXIS axis) { axis_gui_x = axis; };
+	void Set_PointerY_Axis(LEGACY_JOY_AXIS axis) { axis_gui_y = axis; };
+
+	void Set_Yaw_Axis(LEGACY_JOY_AXIS axis) { axis_space_x = axis; };
+	void Set_Pitch_Axis(LEGACY_JOY_AXIS axis) { axis_space_y = axis; };
+	void Set_Roll_Axis(LEGACY_JOY_AXIS axis) { axis_space_r = axis; };
+	void Set_Throttle_Axis(LEGACY_JOY_AXIS axis) { axis_space_t = axis; };
+
+	BOOL Is_PointerX_Axis_Reversed()const { return rev_axis_px; };
+	BOOL Is_PointerY_Axis_Reversed()const { return rev_axis_py; };
+
+	BOOL Is_Yaw_Axis_Reversed()const { return rev_axis_x; };
+	BOOL Is_Pitch_Axis_Reversed()const { return rev_axis_y; };
+	BOOL Is_Roll_Axis_Reversed()const { return rev_axis_r; };
+	BOOL Is_Throttle_Axis_Reversed()const { return rev_axis_t; };
+
+	void Set_PointerX_Axis_Reversed(BOOL is_rev) { rev_axis_px = is_rev; };
+	void Set_PointerY_Axis_Reversed(BOOL is_rev) { rev_axis_py = is_rev; };
+
+	void Set_Yaw_Axis_Reversed(BOOL is_rev) { rev_axis_x = is_rev; };
+	void Set_Pitch_Axis_Reversed(BOOL is_rev) { rev_axis_y = is_rev; };
+	void Set_Roll_Axis_Reversed(BOOL is_rev) { rev_axis_r = is_rev; };
+	void Set_Throttle_Axis_Reversed(BOOL is_rev) { rev_axis_t = is_rev; };
+
+	ACTION_SWITCH* Get_POV() { return pov; };
+
+protected:
+private:
+	JOYCAPS* caps;
+	JOYINFOEX* info;
+	ACTION_KEY* buttons;
+	ACTION_SWITCH* pov;
+
+	DWORD centre_x;
+	DWORD centre_y;
+	DWORD centre_z;
+	DWORD centre_r;
+	DWORD centre_u;
+	DWORD centre_v;
+
+	LEGACY_JOY_AXIS axis_gui_x;
+	LEGACY_JOY_AXIS axis_gui_y;
+
+	LEGACY_JOY_AXIS axis_space_x;
+	LEGACY_JOY_AXIS axis_space_y;
+	LEGACY_JOY_AXIS axis_space_t;
+	LEGACY_JOY_AXIS axis_space_r;
+	
+	BOOL rev_axis_px;
+	BOOL rev_axis_py;
+	
+	BOOL rev_axis_x;
+	BOOL rev_axis_y;
+	BOOL rev_axis_r;
+	BOOL rev_axis_t;
+
+	bool setup;
+};
+
+
 struct P2_JOY_AXES {
 	double x;
 	double y;
@@ -697,6 +837,7 @@ struct P2_JOY_AXES {
 extern P2_JOY_AXES p2_joy_axes;
 
 extern JOYSTICKS Joysticks;
+extern LEGACY_JOY Legacy_Joystick;
 
 bool Get_Joystick_Config_Path(std::wstring* p_ret_string);
 bool Get_Joystick_Config_Path_Local(std::wstring* p_ret_string);

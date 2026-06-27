@@ -41,6 +41,7 @@ bool controller_enhancements_enabled = false;
 double key_throttle = 1.0f;//stored throttle value controlled by keys.
 
 JOYSTICKS Joysticks;
+LEGACY_JOY Legacy_Joystick;
 P2_JOY_AXES p2_joy_axes{};
 
 PROFILE_TYPE current_pro_type = PROFILE_TYPE::GUI;
@@ -1459,3 +1460,533 @@ void JOYSTICKS::Centre_All() {
 
 }
 
+
+//______________________
+void LEGACY_JOY::Setup() {
+	if (setup)
+		return;
+	Debug_Info_Joy("LEGACY_JOY::Setup");
+
+	caps = new JOYCAPS{ 0 };
+	info = new JOYINFOEX{ 0 };
+	info->dwSize = sizeof(JOYINFOEX);
+	info->dwFlags = JOY_RETURNALL;
+
+
+	MMRESULT result = joyGetDevCaps(0, caps, sizeof(JOYCAPS));
+	if (result == JOYERR_NOERROR) {
+		if(caps->wNumButtons)
+			buttons = new ACTION_KEY[caps->wNumButtons];
+		if (caps->wCaps & JOYCAPS_HASPOV) {
+			pov = new ACTION_SWITCH;
+			pov->Set_Num_Positions(4);
+		}
+	}
+	else {
+		Debug_Info_Error("joyGetDevCaps failed result: %u", result);
+	}
+
+	//Load();
+	setup = true;
+}
+
+
+//_____________________________
+JOYCAPS* LEGACY_JOY::Get_Caps() {
+	
+	Setup(); 
+	return caps; 
+}
+
+
+//_______________________________
+JOYINFOEX* LEGACY_JOY::Get_Info() {
+	
+	Setup();
+	MMRESULT result = joyGetPosEx(JOYSTICKID1, info);
+	if(result != JOYERR_NOERROR)
+		Debug_Info_Error("LEGACY_JOY::Get_Info joyGetPosEx failed result: %u", result);
+
+	return info; 
+}
+
+
+//____________________________
+void LEGACY_JOY::Centre_Axes() {
+
+	Setup();
+
+	MMRESULT result = joyGetPosEx(JOYSTICKID1, info);
+	if (result == JOYERR_NOERROR) {
+		if (caps->wNumAxes > 0)
+			centre_x = info->dwXpos;
+		if (caps->wNumAxes > 1)
+			centre_y = info->dwYpos;
+		if (caps->wCaps & JOYCAPS_HASZ)
+			centre_z = info->dwZpos;
+		if (caps->wCaps & JOYCAPS_HASR)
+			centre_r = info->dwRpos;
+		if (caps->wCaps & JOYCAPS_HASU)
+			centre_u = info->dwUpos;
+		if (caps->wCaps & JOYCAPS_HASV)
+			centre_v = info->dwVpos;
+	}
+
+	*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_X_CEN) = centre_x;//x centre
+	*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_Y_CEN) = centre_y;//y centre
+	*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_T_CEN) = centre_z;//z centre
+}
+
+
+//____________________________________________
+BOOL LEGACY_JOY::Is_Axes(LEGACY_JOY_AXIS axis) {
+
+	Setup();
+	switch (axis) {
+	case LEGACY_JOY_AXIS::X:
+		if (caps->wNumAxes > 0)
+			return TRUE;
+		break;
+	case LEGACY_JOY_AXIS::Y:
+		if (caps->wNumAxes > 1)
+			return TRUE;
+		break;
+	case LEGACY_JOY_AXIS::Z:
+		if (caps->wCaps & JOYCAPS_HASZ)
+			return TRUE;
+		break;
+	case LEGACY_JOY_AXIS::R:
+		if (caps->wCaps & JOYCAPS_HASR)
+			return TRUE;
+		break;
+	case LEGACY_JOY_AXIS::U:
+		if (caps->wCaps & JOYCAPS_HASU)
+			return TRUE;
+		break;
+	case LEGACY_JOY_AXIS::V:
+		if (caps->wCaps & JOYCAPS_HASV)
+			return TRUE;
+		break;
+	default:
+		break;
+	}
+	return FALSE;
+}
+
+
+//_____________________
+void LEGACY_JOY::Load() {
+
+	Setup();
+	if (!buttons)
+		return;
+
+	PROFILE_TYPE saved_pro_type = current_pro_type;
+
+	wchar_t button_name[12];
+	wchar_t profile_name[16];
+	int action_default = static_cast<int>(P2_ACTIONS::None);
+
+	for (int i = 0; i < (int)caps->wNumButtons; i++) {
+
+		for (int p = 0; p < 2; p++) {
+
+			if (p == 0) {
+				current_pro_type = PROFILE_TYPE::GUI;
+				swprintf(profile_name, _countof(profile_name), L"JOY_LEGACY_GUI");
+				switch (i) {
+				case 0:
+					action_default = static_cast<int>(P2_ACTIONS::Left_Click_Key_GUI);
+					break;
+				case 1:
+					action_default = static_cast<int>(P2_ACTIONS::Right_Click_Key_GUI);
+					break;
+				case 2:
+					action_default = static_cast<int>(P2_ACTIONS::GUI_PAD);
+					break;
+				case 3:
+					action_default = static_cast<int>(P2_ACTIONS::Main_Load_Escape);
+					break;
+				default:
+					action_default = static_cast<int>(P2_ACTIONS::None);
+					break;
+				}
+			}
+			else if (p == 1) {
+				current_pro_type = PROFILE_TYPE::Space;
+				swprintf(profile_name, _countof(profile_name), L"JOY_LEGACY_SPACE");
+				switch (i) {
+				case 0:
+					action_default = static_cast<int>(P2_ACTIONS::Fire_Guns);
+					break;
+				case 1:
+					action_default = static_cast<int>(P2_ACTIONS::Joystick_Roll_Modifier);
+					break;
+				case 2:
+					action_default = static_cast<int>(P2_ACTIONS::Fire_Missile);
+					break;
+				case 3:
+					action_default = static_cast<int>(P2_ACTIONS::Afterburner);
+					break;
+				default:
+					action_default = static_cast<int>(P2_ACTIONS::None);
+					break;
+				}
+			}
+			swprintf(button_name, _countof(button_name), L"BUTTON_%02d", i + 1);
+			buttons[i].Set_Action(static_cast<P2_ACTIONS>(ConfigReadInt_InGame(profile_name, button_name, action_default)));
+		}
+	}
+
+	if (pov) {
+		current_pro_type = PROFILE_TYPE::GUI;
+		pov->Set_Action(1, static_cast<P2_ACTIONS>(ConfigReadInt_InGame(L"JOY_LEGACY_GUI", L"POV_FORWARD", static_cast<int>(P2_ACTIONS::None))));
+		pov->Set_Action(2, static_cast<P2_ACTIONS>(ConfigReadInt_InGame(L"JOY_LEGACY_GUI", L"POV_LEFT", static_cast<int>(P2_ACTIONS::None))));
+		pov->Set_Action(3, static_cast<P2_ACTIONS>(ConfigReadInt_InGame(L"JOY_LEGACY_GUI", L"POV_RIGHT", static_cast<int>(P2_ACTIONS::None))));
+		pov->Set_Action(4, static_cast<P2_ACTIONS>(ConfigReadInt_InGame(L"JOY_LEGACY_GUI", L"POV_BACK", static_cast<int>(P2_ACTIONS::None))));;
+		current_pro_type = PROFILE_TYPE::Space;
+		pov->Set_Action(1, static_cast<P2_ACTIONS>(ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"POV_FORWARD", static_cast<int>(P2_ACTIONS::View_Front))));
+		pov->Set_Action(2, static_cast<P2_ACTIONS>(ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"POV_LEFT", static_cast<int>(P2_ACTIONS::View_Left))));
+		pov->Set_Action(3, static_cast<P2_ACTIONS>(ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"POV_RIGHT", static_cast<int>(P2_ACTIONS::View_Right))));
+		pov->Set_Action(4, static_cast<P2_ACTIONS>(ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"POV_BACK", static_cast<int>(P2_ACTIONS::View_Back))));;
+	}
+
+	axis_gui_x = static_cast<LEGACY_JOY_AXIS>(ConfigReadInt_InGame(L"JOY_LEGACY_GUI", L"POINTER_X", static_cast<int>(LEGACY_JOY_AXIS::X)));
+	axis_gui_y = static_cast<LEGACY_JOY_AXIS>(ConfigReadInt_InGame(L"JOY_LEGACY_GUI", L"POINTER_Y", static_cast<int>(LEGACY_JOY_AXIS::Y)));
+
+	rev_axis_px = ConfigReadInt_InGame(L"JOY_LEGACY_GUI", L"POINTER_X_REV", FALSE);
+	rev_axis_py = ConfigReadInt_InGame(L"JOY_LEGACY_GUI", L"POINTER_Y_REV", FALSE);
+
+	axis_space_x = static_cast<LEGACY_JOY_AXIS>(ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"YAW", static_cast<int>(LEGACY_JOY_AXIS::X)));
+	axis_space_y = static_cast<LEGACY_JOY_AXIS>(ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"PITCH", static_cast<int>(LEGACY_JOY_AXIS::Y)));
+	axis_space_r = static_cast<LEGACY_JOY_AXIS>(ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"ROLL", static_cast<int>(LEGACY_JOY_AXIS::R)));
+	axis_space_t = static_cast<LEGACY_JOY_AXIS>(ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"THROTTLE", static_cast<int>(LEGACY_JOY_AXIS::Z)));
+
+	rev_axis_x = ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"YAW_REV", FALSE);
+	rev_axis_y = ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"PITCH_REV", FALSE);
+	rev_axis_r = ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"ROLL_REV", FALSE);
+	rev_axis_t = ConfigReadInt_InGame(L"JOY_LEGACY_SPACE", L"THROTTLE_REV", FALSE);
+
+
+	current_pro_type = saved_pro_type;
+}
+
+
+//_____________________
+void LEGACY_JOY::Save() {
+
+	Setup();
+	if (!buttons)
+		return;
+
+	PROFILE_TYPE saved_pro_type = current_pro_type;
+	wchar_t button_name[12];
+	wchar_t profile_name[16];
+
+	for (int i = 0; i < (int)caps->wNumButtons; i++) {
+		for (int p = 0; p < 2; p++) {
+			if (p == 0) {
+				current_pro_type = PROFILE_TYPE::GUI;
+				swprintf(profile_name, _countof(profile_name), L"JOY_LEGACY_GUI");
+			}
+			else if (p == 1) {
+				current_pro_type = PROFILE_TYPE::Space;
+				swprintf(profile_name, _countof(profile_name), L"JOY_LEGACY_SPACE");
+			}
+			swprintf(button_name, _countof(button_name), L"BUTTON_%02d", i + 1);
+			ConfigWriteInt_InGame(profile_name, button_name, static_cast<int>(buttons[i].GetAction()));
+		}
+	}
+
+	if (pov) {
+		current_pro_type = PROFILE_TYPE::GUI;
+		ConfigWriteInt_InGame(L"JOY_LEGACY_GUI", L"POV_FORWARD", static_cast<int>(pov->GetAction(1)));
+		ConfigWriteInt_InGame(L"JOY_LEGACY_GUI", L"POV_LEFT", static_cast<int>(pov->GetAction(2)));
+		ConfigWriteInt_InGame(L"JOY_LEGACY_GUI", L"POV_RIGHT", static_cast<int>(pov->GetAction(3)));
+		ConfigWriteInt_InGame(L"JOY_LEGACY_GUI", L"POV_BACK", static_cast<int>(pov->GetAction(4)));
+		current_pro_type = PROFILE_TYPE::Space;
+		ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"POV_FORWARD", static_cast<int>(pov->GetAction(1)));
+		ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"POV_LEFT", static_cast<int>(pov->GetAction(2)));
+		ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"POV_RIGHT", static_cast<int>(pov->GetAction(3)));
+		ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"POV_BACK", static_cast<int>(pov->GetAction(4)));
+	}
+
+	ConfigWriteInt_InGame(L"JOY_LEGACY_GUI", L"POINTER_X", static_cast<int>(axis_gui_x));
+	ConfigWriteInt_InGame(L"JOY_LEGACY_GUI", L"POINTER_Y", static_cast<int>(axis_gui_y));
+
+	ConfigWriteInt_InGame(L"JOY_LEGACY_GUI", L"POINTER_X_REV", rev_axis_px);
+	ConfigWriteInt_InGame(L"JOY_LEGACY_GUI", L"POINTER_Y_REV", rev_axis_py);
+
+	ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"YAW", static_cast<int>(axis_space_x));
+	ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"PITCH", static_cast<int>(axis_space_y));
+	ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"ROLL", static_cast<int>(axis_space_r));
+	ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"THROTTLE", static_cast<int>(axis_space_t));
+
+	ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"YAW_REV", rev_axis_x);
+	ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"PITCH_REV", rev_axis_y);
+	ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"ROLL_REV", rev_axis_r);
+	ConfigWriteInt_InGame(L"JOY_LEGACY_SPACE", L"THROTTLE_REV", rev_axis_t);
+
+	current_pro_type = saved_pro_type;
+}
+
+
+BOOL LEGACY_JOY::Get_Axis_Vars(LEGACY_JOY_AXIS lja, DWORD *p_centre, DWORD *p_min, DWORD *p_max, DWORD *p_pos) {
+	Setup();
+
+	switch (lja) {
+	case LEGACY_JOY_AXIS::X:
+		if (caps->wNumAxes < 1)
+			return FALSE;
+		*p_centre = centre_x;
+		*p_min = caps->wXmin;
+		*p_max = caps->wXmax;
+		*p_pos = info->dwXpos;
+		break;
+	case LEGACY_JOY_AXIS::Y:
+		if (caps->wNumAxes < 2)
+			return FALSE;
+		*p_centre = centre_y;
+		*p_min = caps->wYmin;
+		*p_max = caps->wYmax;
+		*p_pos = info->dwYpos;
+		break;
+	case LEGACY_JOY_AXIS::Z:
+		if (!(caps->wCaps & JOYCAPS_HASZ))
+			return FALSE;
+		*p_centre = centre_z;
+		*p_min = caps->wZmin;
+		*p_max = caps->wZmax;
+		*p_pos = info->dwZpos;
+		break;
+	case LEGACY_JOY_AXIS::R:
+		if (!(caps->wCaps & JOYCAPS_HASR))
+			return FALSE;
+		*p_centre = centre_r;
+		*p_min = caps->wRmin;
+		*p_max = caps->wRmax;
+		*p_pos = info->dwRpos;
+		break;
+	case LEGACY_JOY_AXIS::U:
+		if (!(caps->wCaps & JOYCAPS_HASU))
+			return FALSE;
+		*p_centre = centre_u;
+		*p_min = caps->wUmin;
+		*p_max = caps->wUmax;
+		*p_pos = info->dwUpos;
+		break;
+	case LEGACY_JOY_AXIS::V:
+		if (!(caps->wCaps & JOYCAPS_HASV))
+			return FALSE;
+		*p_centre = centre_v;
+		*p_min = caps->wVmin;
+		*p_max = caps->wVmax;
+		*p_pos = info->dwVpos;
+		break;
+	default:
+		return FALSE;
+		break;
+	}
+
+	return TRUE;
+}
+
+//_______________________
+void LEGACY_JOY::Update() {
+
+	Setup();
+	if (!buttons)
+		return;
+
+	MMRESULT result = joyGetPosEx(JOYSTICKID1, info);
+	if (result != JOYERR_NOERROR) {
+		Debug_Info_Error("LEGACY_JOY::Update joyGetPosEx failed result: %u", result);
+		return;
+	}
+	int pow = 1;
+	for (int i = 0; i < (int)caps->wNumButtons; i++) {
+		buttons[i].SetButton((info->dwButtons & pow) >> i);
+		pow *= 2;
+	}
+	info->dwButtons = 0;
+
+
+	if (pov) {
+		int switch_num = 0;
+		switch (info->dwPOV) {
+		case JOY_POVFORWARD:
+			switch_num = 1;
+			break;
+		case JOY_POVLEFT:
+			switch_num = 2;
+			break;
+		case JOY_POVRIGHT:
+			switch_num = 3;
+			break;
+		case JOY_POVBACKWARD:
+			switch_num = 4;
+			break;
+
+		default:
+			break;
+		}
+		pov->Switch_Position(switch_num);
+	}
+
+	DWORD centre = 0;
+	DWORD min = 0;
+	DWORD max = 0;
+	DWORD pos = 0;
+
+	double f_centre = 0;
+	double f_pos = 0;
+	double f_span = 0;
+
+	if (current_pro_type == PROFILE_TYPE::GUI) {
+		if (Get_Axis_Vars(axis_gui_x, &centre, &min, &max, &pos)) {
+			f_centre = centre - min;
+			f_pos = pos - min;
+			f_span = max - min;
+			p2_joy_axes.x = -(f_centre - f_pos) / f_centre;
+			if (rev_axis_px)
+				p2_joy_axes.x = -p2_joy_axes.x;
+		}
+		if (Get_Axis_Vars(axis_gui_y, &centre, &min, &max, &pos)) {
+			f_centre = centre - min;
+			f_pos = pos - min;
+			f_span = max - min;
+			p2_joy_axes.y = -(f_centre - f_pos) / f_centre;
+			if (rev_axis_py)
+				p2_joy_axes.y = -p2_joy_axes.y;
+		}
+	}
+	else {
+		if (Get_Axis_Vars(axis_space_x, &centre, &min, &max, &pos)) {
+			f_centre = centre - min;
+			f_pos = pos - min;
+			f_span = max - min;
+			p2_joy_axes.x = -(f_centre - f_pos) / f_centre;
+			if (rev_axis_x)
+				p2_joy_axes.x = -p2_joy_axes.x;
+		}
+		if (Get_Axis_Vars(axis_space_y, &centre, &min, &max, &pos)) {
+			f_centre = centre - min;
+			f_pos = pos - min;
+			f_span = max - min;
+			p2_joy_axes.y = -(f_centre - f_pos) / f_centre;
+			if (rev_axis_y)
+				p2_joy_axes.y = -p2_joy_axes.y;
+		}
+	}
+		p2_joy_axes.r = 0;
+		if (Get_Axis_Vars(axis_space_r, &centre, &min, &max, &pos)) {
+			f_centre = centre - min;
+			f_pos = pos - min;
+			f_span = max - min;
+			p2_joy_axes.r = -(f_centre - f_pos) / f_centre;
+			if (rev_axis_r)
+				p2_joy_axes.r = -p2_joy_axes.r;
+		}
+
+		if (Get_Axis_Vars(axis_space_t, &centre, &min, &max, &pos)) {
+			f_centre = centre - min;
+			f_pos = pos - min;
+			f_span = max - min;
+			p2_joy_axes.t = (max - pos - min) / f_span;
+			if (rev_axis_t)
+				p2_joy_axes.t = 1.0f - p2_joy_axes.t;
+		}
+	
+
+	float f_deadzone = *(float*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_DEAD_ZONE);
+	if (p2_joy_axes.x <= f_deadzone && p2_joy_axes.x >= -f_deadzone)
+		p2_joy_axes.x = 0;
+	if (p2_joy_axes.y <= f_deadzone && p2_joy_axes.y >= -f_deadzone)
+		p2_joy_axes.y = 0;
+	if (p2_joy_axes.r <= f_deadzone && p2_joy_axes.r >= -f_deadzone)
+		p2_joy_axes.r = 0;
+
+	if (p2_joy_axes.t <= f_deadzone)
+		p2_joy_axes.t = 0;
+	else if (p2_joy_axes.t >= 1.0f - f_deadzone)
+		p2_joy_axes.t = 1.0f;
+
+	if (!*p_p2_y_axis_orientation && current_pro_type == PROFILE_TYPE::Space)
+		p2_joy_axes.y = -p2_joy_axes.y;
+
+
+	if (p2_joy_axes.yaw_as_roll) {
+		p2_joy_axes.r += p2_joy_axes.x;
+		p2_joy_axes.x = 0;
+	}
+	else {
+		if (Is_Alt_Flight_Mode())
+			p2_joy_axes.r += p2_joy_axes.x;
+	}
+
+	Update_Axis_Keys();
+	Maintain_Axis_Limits();
+}
+
+//________________________________________________________________________
+P2_ACTIONS LEGACY_JOY::GetAction_Button(int button, PROFILE_TYPE pro_type) {
+
+	Setup();
+
+	if (button < 0 || button >= (int)caps->wNumButtons)
+		return P2_ACTIONS::None;
+
+	PROFILE_TYPE saved_pro_type = current_pro_type;
+	current_pro_type = pro_type;
+	P2_ACTIONS action = buttons[button].GetAction();
+
+	current_pro_type = saved_pro_type;
+	return action;
+}
+
+
+//_____________________________________________________________________________________
+void LEGACY_JOY::SetAction_Button(int button, P2_ACTIONS action, PROFILE_TYPE pro_type) {
+
+	Setup();
+
+	PROFILE_TYPE saved_pro_type = current_pro_type;
+	current_pro_type = pro_type;
+	if (button >= 0 && button < (int)caps->wNumButtons)
+		buttons[button].Set_Action(action);
+	current_pro_type = saved_pro_type;
+}
+
+
+//___________________________________________________________________
+P2_ACTIONS LEGACY_JOY::Get_Action_POV(int pos, PROFILE_TYPE pro_type) {
+
+	Setup();
+
+
+	if(!pov)
+		return P2_ACTIONS::None;
+
+	if (pos < 1 || pos >= 5)
+		return P2_ACTIONS::None;
+
+	PROFILE_TYPE saved_pro_type = current_pro_type;
+	current_pro_type = pro_type;
+	P2_ACTIONS action = pov->GetAction(pos);
+
+	current_pro_type = saved_pro_type;
+	return action;
+}
+
+
+//________________________________________________________________________________
+void LEGACY_JOY::Set_Action_POV(int pos, P2_ACTIONS action, PROFILE_TYPE pro_type) {
+
+	Setup();
+
+	PROFILE_TYPE saved_pro_type = current_pro_type;
+	current_pro_type = pro_type;
+	if (pov && pos >= 1 && pos < 5)
+		pov->Set_Action(pos, action);
+	current_pro_type = saved_pro_type;
+}

@@ -250,6 +250,16 @@
 #define IDS_MOD003                      322
 #define IDS_MODS003                     322
 #define IDS_TAB_KEYS_2                  323
+#define IDS_AXIS_LEGACY_01              324
+#define IDS_AXIS_LEGACY_02              325
+#define IDS_AXIS_LEGACY_03              326
+#define IDS_AXIS_LEGACY_04              327
+#define IDS_AXIS_LEGACY_05              328
+#define IDS_AXIS_LEGACY_06              329
+#define IDS_POV_LEGACY_01               330
+#define IDS_POV_LEGACY_02               331
+#define IDS_POV_LEGACY_03               332
+#define IDS_POV_LEGACY_04               333
 #define IDC_BUTTON_YAW                  1000
 #define IDC_LIST_BUTTONS                1002
 #define IDC_LIST_ACTIONS                1002
@@ -289,11 +299,17 @@
 #define IDC_COMBO_SELECT_BUTTONS        1038
 #define IDC_COMBO_SELECT_BUTTON_ACTION  1039
 #define IDC_COMBO_SELECT_SWITCHES       1040
+#define IDC_COMBO_SELECT_BUTTONS_SPACE  1040
 #define IDC_COMBO_SELECT_SWITCH_POS     1041
+#define IDC_COMBO_SELECT_BUTTON_ACTION_SPACE 1041
 #define IDC_COMBO_SELECT_SWITCH_ACTION  1042
+#define IDC_COMBO_SELECT_POV_POS_GUI    1042
 #define IDC_CHECK_ELECTED_AXIS_CALIBRATE 1043
+#define IDC_COMBO_SELECT_POV_ACTION_GUI 1043
 #define IDC_STATIC_AXIS_BAR             1044
+#define IDC_COMBO_SELECT_POV_POS_SPACE  1044
 #define IDC_STATIC_BUTTON_STATE         1045
+#define IDC_COMBO_SELECT_POV_ACTION_SPACE 1045
 #define IDC_STATIC_SWITCH_STATE         1046
 #define IDC_BUTTON_CENTRE_AXIS          1047
 #define IDC_STATIC_INFO                 1048
@@ -302,6 +318,7 @@
 #define IDC_COMBO_DEAD_ZONE             1051
 #define IDC_BUTTON_CALIBRATE_AXIS       1052
 #define IDC_COMBO_AXIS_RANGE            1052
+#define IDC_COMBO_CURRENT_PROFILE       1052
 #define IDC_BUTTON_CENTRE_ALL           1053
 #define IDC_EDIT_PRESET_NAME            1054
 #define IDC_BUTTON_SAVE_PRESET          1055
@@ -371,8 +388,23 @@
 #define IDC_STATIC_INSTRUCTIONS         1122
 #define IDC_CHECK_INVERT_Y_AXIS         1124
 #define IDC_CHECK_ALT_FLT_MODE          1126
-#define IDC_CHECK2                      1128
 #define IDC_CHECK_REV_SPEED_KEY_SPACE   1128
+#define IDC_STATIC_XY_BOX2              1129
+#define IDC_COMBO_SELECT_AXIS_THROTTLE  1130
+#define IDC_COMBO_SELECT_AXIS_ROLL      1131
+#define IDC_COMBO_SELECT_BUTTONS_GUI    1132
+#define IDC_COMBO_SELECT_BUTTON_ACTION_GUI 1133
+#define IDC_COMBO_SELECT_AXIS_YAW       1134
+#define IDC_COMBO_SELECT_AXIS_PITCH     1135
+#define IDC_CHECK_REV_AXIS_YAW          1136
+#define IDC_CHECK_REV_AXIS_PITCH        1137
+#define IDC_CHECK_REV_AXIS_ROLL         1138
+#define IDC_CHECK_REV_AXIS_THROTTLE     1139
+#define IDC_COMBO_SELECT_AXIS_X         1140
+#define IDC_CHECK_REV_AXIS_X            1141
+#define IDC_COMBO_SELECT_AXIS_Y         1142
+#define IDC_CHECK_REV_AXIS_PITCH2       1143
+#define IDC_CHECK_REV_AXIS_Y            1143
 #define IDC_STATIC                      -1
 #define IDC_STATIC_XY_BOX               -1
 
@@ -383,7 +415,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        152
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1129
+#define _APS_NEXT_CONTROL_VALUE         1137
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

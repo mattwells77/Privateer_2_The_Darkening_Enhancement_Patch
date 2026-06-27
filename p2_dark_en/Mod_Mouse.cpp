@@ -363,23 +363,23 @@ static void Get_Space_Mouse_Movement(float* p_fx, float* p_fy) {
 //________________________________________________
 static void Update_Space_Mouse(BYTE* space_struct) {
 
-    int16_t* p_mouse_x = (int16_t*)(space_struct + 0x140);
-    int16_t* p_mouse_y = (int16_t*)(space_struct + 0x142);
+    int16_t* p_mouse_x = (int16_t*)(space_struct + SPACE_STRUCT_MOUSE_X);
+    int16_t* p_mouse_y = (int16_t*)(space_struct + SPACE_STRUCT_MOUSE_Y);
     Get_Mouse_Position16(p_mouse_x, p_mouse_y);
 
-    uint16_t* p_mouse_button_1 = (uint16_t*)(space_struct + 0x14C);
-    uint16_t* p_mouse_button_2 = (uint16_t*)(space_struct + 0x14E);
+    uint16_t* p_mouse_button_1 = (uint16_t*)(space_struct + SPACE_STRUCT_MOUSE_BUTTON01);
+    uint16_t* p_mouse_button_2 = (uint16_t*)(space_struct + SPACE_STRUCT_MOUSE_BUTTON02);
     Get_Mouse_Buttons(p_mouse_button_1, p_mouse_button_2);
     
-    uint16_t* p_mouse_button_pressed = (uint16_t*)(space_struct + 0x152);
+    uint16_t* p_mouse_button_pressed = (uint16_t*)(space_struct + SPACE_STRUCT_MOUSE_BUTTON_PRESSED);
     if (p_mouse_button_1 || p_mouse_button_2)
         *p_mouse_button_pressed = 1;
 
     if (*p_p2_controller_flags != 0)
         return;
 
-    int16_t* p_mouse_x_centred = (int16_t*)(space_struct + 0x148);
-    int16_t* p_mouse_y_centred = (int16_t*)(space_struct + 0x14A);
+    int16_t* p_mouse_x_centred = (int16_t*)(space_struct + SPACE_STRUCT_MOUSE_X_CENTRED);
+    int16_t* p_mouse_y_centred = (int16_t*)(space_struct + SPACE_STRUCT_MOUSE_Y_CENTRED);
 
     float f_mouse_x = 0;
     float f_mouse_y = 0;

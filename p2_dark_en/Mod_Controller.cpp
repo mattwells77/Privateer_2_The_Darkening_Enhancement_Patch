@@ -30,73 +30,10 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "configTools.h"
 
 
+
+JOYCAPS joy_caps_original{ 0 };
 ACTION_KEY action_key_original[4]{};
-
-
-//_____________________________________
-static void Action_Key_Original_Setup() {
-	static bool run_once = 0;
-
-	if (run_once)
-		return;
-
-	PROFILE_TYPE saved_pro_type = current_pro_type;
-
-	current_pro_type = PROFILE_TYPE::GUI;
-	action_key_original[0].Set_Action(P2_ACTIONS::Left_Click);
-	action_key_original[1].Set_Action(P2_ACTIONS::Right_Click);
-	action_key_original[2].Set_Action(P2_ACTIONS::GUI_PAD);
-	action_key_original[3].Set_Action(P2_ACTIONS::Main_Load_Escape);
-	current_pro_type = PROFILE_TYPE::Space;
-	action_key_original[0].Set_Action(P2_ACTIONS::Fire_Guns);
-	action_key_original[1].Set_Action(P2_ACTIONS::Joystick_Roll_Modifier);/////////////////////////////////
-	action_key_original[2].Set_Action(P2_ACTIONS::Fire_Missile);
-	action_key_original[3].Set_Action(P2_ACTIONS::Afterburner);
-	current_pro_type = saved_pro_type;
-	run_once = true;
-}
-
-
-//____________________________________
-static void Original_Joystick_Update() {
-
-	Action_Key_Original_Setup();
-
-	p2_update_and_proccess_joystick_data();
-	//Debug_Info("Original_Joystick_Update x %f, y %f, t %f, dz %f", *p_p2_space_struct_joy_fx, *p_p2_space_struct_joy_fy, *p_p2_space_struct_joy_ft, *p_p2_space_struct_joy_f_dead_zone);
-
-	BYTE* pbuttons = p_p2_space_struct_joy_buttons;
-	action_key_original[0].SetButton(*pbuttons & 0x1);
-	action_key_original[1].SetButton((*pbuttons & 0x2) >> 1);
-	action_key_original[2].SetButton((*pbuttons & 0x4) >> 2);
-	action_key_original[3].SetButton((*pbuttons & 0x8) >> 3);
-	*pbuttons = 0;
-
-	if (*p_p2_y_axis_orientation)
-		p2_joy_axes.y = *p_p2_space_struct_joy_fy;
-	else
-		p2_joy_axes.y = -*p_p2_space_struct_joy_fy;
-
-	if (*p_p2_controller_flags & 0x2)
-		p2_joy_axes.t = *p_p2_space_struct_joy_ft;
-	else
-		p2_joy_axes.t = 0;
-
-	if (p2_joy_axes.yaw_as_roll) {
-		p2_joy_axes.r = (*p_p2_space_struct_joy_fx);
-		p2_joy_axes.x = 0;
-	}
-	else {
-		p2_joy_axes.x = (*p_p2_space_struct_joy_fx);
-		p2_joy_axes.r = 0;
-		if (Is_Alt_Flight_Mode())
-			p2_joy_axes.r = p2_joy_axes.x;
-	}
-
-	Update_Axis_Keys();
-	Maintain_Axis_Limits();
-}
-
+ACTION_SWITCH action_pov_original{};
 
 
 //______________________
@@ -108,7 +45,8 @@ static void Joy_Update() {
 	if (controller_enhancements_enabled)
 		Joysticks.Update();
 	else
-		Original_Joystick_Update();
+		Legacy_Joystick.Update();
+		//p2_update_joystick_data(p_p2_space_struct);
 
 	Check_Mouse_Double_Click();
 }
@@ -133,13 +71,6 @@ static void __declspec(naked) joy_update_main(void) {
 //_________________________________________________
 static void Joy_GetCurrentState(BYTE* space_struct) {
 	
-	//if (controller_enhancements_enabled)
-	//	Joysticks.Update();
-	//else
-	//	Original_Joystick_Update();
-	
-	//*p_p2_space_struct_joy_ft = (float)p2_joy_axes.t;
-
 	void* p_pc_ship_struct = (void*)(space_struct + (*p_p2_space_struct_number_of_objects * SPACE_OBJECT_STRUCT_SIZE));
 
 	*(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FX_OFFSET) = -(float)p2_joy_axes.x;
@@ -285,7 +216,6 @@ static void __declspec(naked) options_screen_calibrate_controller(void) {
 }
 
 
-
 //___________________________________
 static BOOL Check_Update_Input_Time() {
 
@@ -316,17 +246,87 @@ static void __declspec(naked) check_update_input_time(void) {
 }
 
 
+//______________________________________________________________________________________________________________________________________________________________________________________________________________________
+static void __stdcall Set_Legacy_Joy_Caps(float deadzone, DWORD x_min, DWORD y_min, DWORD x_centre, DWORD y_centre, DWORD x_max, DWORD y_max, DWORD t_min, DWORD t_centre, DWORD t_max, DWORD joy_on, DWORD throttle_on) {
+
+	*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_ON) = joy_on;
+	*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_THROTTLE_ON) = throttle_on;
+	
+	if (joyGetNumDevs())
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_FLAGS) = 5;
+	else
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_FLAGS) = 0;
+	
+	*(float*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_DEAD_ZONE) = deadzone;
+
+	*(float*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_T_DEAD_ZONE) = 0.1f; //= t_deadzone
+
+	Legacy_Joystick.Load();
+	JOYCAPS* caps = Legacy_Joystick.Get_Caps();
+
+	if (!caps) {
+		Debug_Info_Error("Set_Legacy_Joy_Caps Failed! ");
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_X_CEN) = x_centre;
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_Y_CEN) = y_centre;
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_T_CEN) = t_centre;
+
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_X_MIN) = x_min;
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_X_MAX) = x_max;
+
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_Y_MIN) = y_min;
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_Y_MAX) = y_max;
+
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_T_MIN) = t_min;
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_T_MAX) = t_max;
+	}
+	else {
+		Legacy_Joystick.Centre_Axes();
+
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_X_MIN) = caps->wXmin;//x max
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_X_MAX) = caps->wXmax;//x min
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_Y_MIN) = caps->wYmin;//y max
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_Y_MAX) = caps->wYmax;//y min
+
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_T_MIN) = caps->wZmin;//z max
+		*(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_T_MAX) = caps->wZmax;//z min
+	}
+
+	Debug_Info_Joy("joy on: %u", *(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_ON));//x 
+	Debug_Info_Joy("throttle on: %u", *(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_THROTTLE_ON));//x centre
+
+	Debug_Info_Joy("x_centre: %u", *(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_X_CEN));//x centre
+	Debug_Info_Joy("y_centre: %u", *(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_Y_CEN));//y centre
+	Debug_Info_Joy("z_centre: %u", *(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_T_CEN));//z centre
+
+	Debug_Info_Joy("x_min: %u", *(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_X_MIN));//x max
+	Debug_Info_Joy("x_max: %u", *(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_X_MAX));//x min
+
+	Debug_Info_Joy("y_min: %u", *(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_Y_MIN));//y max
+	Debug_Info_Joy("y_max: %u", *(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_Y_MAX));//y min
+
+	//Debug_Info("t_deadzone: %f", *(float*)((BYTE*)p_p2_space_struct + 0x2796C));
+
+	Debug_Info_Joy("t_min: %u", *(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_T_MIN));//z max
+	Debug_Info_Joy("t_max: %u", *(DWORD*)((BYTE*)p_p2_space_struct + SPACE_STRUCT_JOY_T_MAX));//z min
+}
+
+
 //__________________________________________
 void Modifications_Controller_Enhancements() {
 
 	controller_enhancements_enabled = true;
+}
+
+
+//___________________________
+void Modifications_Joystick() {
 
 	//skip the drawing of redundant joystick buttons when controller enhancements are enabled.
 	MemWrite8(0x45D2C4, 0x83, 0xE8);
 	FuncWrite32(0x45D2C5, 0xC58314C7, (DWORD)&options_screen_skip_joy_button_draws);
 	MemWrite32(0x45D2C9, 0x14C38308, 0x90909090);
 	MemWrite8(0x45D2CD, 0x41, 0x90);
-	
+
 	//just draw the "calibrate joystick" button
 	//jump over the drawing of the "calibrate throttle" button and text
 	MemWrite16(0x45D3CD, 0x3D75, 0x3BEB); //JMP SHORT 0045D40A                   
@@ -353,11 +353,7 @@ void Modifications_Controller_Enhancements() {
 	//jump the "calibrate throttle" button check.
 	MemWrite16(0x45D828, 0x868B, 0x55EB);//JMP SHORT 0045D87F
 	MemWrite32(0x45D82A, 0x0140, 0x90909090);
-}
 
-
-//___________________________
-void Modifications_Joystick() {
 
 	// Replaced Sleep(20) function delay with a timer check, when updating controller/keyboard and exit game flag checking.
 	// This was bottlenecking the message loop, causing lag when processing mouse and keyboard messages.
@@ -416,4 +412,15 @@ void Modifications_Joystick() {
 	//skip y axis orientation section.
 	//This is still done in the Original_Joystick_Update function but no longer has an effect on the mouse y axis. Mice have their own setting for inverting the y axis.
 	MemWrite8(0x4503FD, 0x75, 0xEB);
+
+
+	//00421BD3 | .E8 E4980200                      CALL Set_Joy_Caps(float deadzone, x_max, y_max, x_entre, y_centre, x_; \DARK.Set_Joy_Caps(float deadzone, x_max, y_max, x_entre, y_centre, x_min, y_min, t_max, t_centre, t_min, joy_on, throttle_on)
+	FuncReplace32(0x421BD4, 0x0298E4, (DWORD)&Set_Legacy_Joy_Caps);
+
+	//0046A3AD | .  2E:FF15 98015700                 CALL DWORD PTR CS : [<&WINMM.joyGetPosEx>]
+	//MemWrite32(0x46A3B0, 0x570198, (DWORD)&p_Original_joyGetPosEx);
+
+
+	//004503FD | . / 75 28                            JNE SHORT 00450427
+
 }
