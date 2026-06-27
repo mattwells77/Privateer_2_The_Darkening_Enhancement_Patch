@@ -400,6 +400,36 @@ void Simulate_Key_Pressed(P2_ACTIONS action, LONG duration_ms) {
 }
 
 
+//___________________________________________________
+static void Max_Speed_After_Afterburner_And_Jumping() {
+	//use original behaviour after extreme acceleration eg. afterburner or jumping.
+	static bool max_speed = false;
+	static bool run_once = false;
+	if (!run_once) {
+		if (ConfigReadInt_InGame(L"SPACE", L"MAX_SPEED_AFTER_AFTERBURNER_JUMPING", CONFIG_SPACE_MAX_SPEED_AFTER_AFTERBURNER_JUMPING))
+			max_speed = true;
+		run_once = true;
+	}
+	if (key_throttle == 1.0f)
+		return;
+	if (max_speed) {
+		DWORD num_objects = *p_p2_space_struct_number_of_objects;
+		BYTE* player_ship = (BYTE*)p_p2_space_struct + (num_objects * SPACE_OBJECT_STRUCT_SIZE);
+
+		DWORD player_ship_type = *(DWORD*)(player_ship + SPACE_PC_SHIP_STRUCT_SHIP_TYPE_VARS);
+		player_ship_type >>= 0x10;
+
+		BYTE* ship_type_list = (BYTE*)p_p2_space_object_type_struct_list;
+		float player_ship_max_speed = *(float*)(ship_type_list + (player_ship_type * SPACE_OBJECT_TYPE_STRUCT_SIZE));
+
+		float* p_player_ship_current_speed = (float*)(player_ship + SPACE_PC_SHIP_STRUCT_FT_OFFSET);
+		//Debug_Info("Update_Axis_Keys: tagS: plcurrS %f", *p_player_ship_current_speed / player_ship_max_speed);
+		if (*p_player_ship_current_speed / player_ship_max_speed > 1.0f)
+			key_throttle = 1.0f;
+	}
+}
+
+
 //_______________________
 void Reset_Key_Throttle() {
 
@@ -426,7 +456,7 @@ static float Match_Target_Speed() {
 	float target_speed = *(float*)(target_ship + SPACE_OBJECT_STRUCT_CURRENT_SPEED);
 
 	//float* p_player_ship_current_speed = (float*)(player_ship + SPACE_PC_SHIP_STRUCT_FT_OFFSET);
-	//Debug_Info("Match_Target_Speed: tagS: %f, plmaxS %f, plcurrS %f", target_speed, player_ship_max_speed, p_player_ship_current_speed);
+	//Debug_Info("Match_Target_Speed: tagS: %f, plmaxS %f, plcurrS %f", target_speed, player_ship_max_speed, *p_player_ship_current_speed);
 	if (target_speed > player_ship_max_speed)
 		return 1.0f;
 
@@ -483,6 +513,9 @@ void Update_Axis_Keys() {
 		p2_joy_axes.r += button_val;
 
 	if (current_pro_type == PROFILE_TYPE::Space) {
+
+		Max_Speed_After_Afterburner_And_Jumping();
+
 		static BYTE* p_speed_plus = P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Speed_Increase)];
 		static BYTE* p_speed_plus2 = P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Speed_Increase_2)];
 		static BYTE* p_speed_minus = P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Speed_Decrease)];
