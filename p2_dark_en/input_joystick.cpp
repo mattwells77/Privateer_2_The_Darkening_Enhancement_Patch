@@ -230,6 +230,7 @@ void Simulate_Key_Press(P2_ACTIONS action) {
 	case P2_ACTIONS::Rotation_Speed_Key:
 		p2_joy_axes.button_mod = TRUE;
 		return;
+	case P2_ACTIONS::Right_Click:
 	case P2_ACTIONS::Joystick_Roll_Modifier:
 		p2_joy_axes.yaw_as_roll = TRUE;
 		//start timer to test for a quick button click.
@@ -328,6 +329,7 @@ void Simulate_Key_Release(P2_ACTIONS action) {
 	case P2_ACTIONS::Rotation_Speed_Key:
 		p2_joy_axes.button_mod = FALSE;
 		return;
+	case P2_ACTIONS::Right_Click:
 	case P2_ACTIONS::Joystick_Roll_Modifier: {
 		p2_joy_axes.yaw_as_roll = FALSE;
 		LONGLONG time{ 0 };

@@ -371,6 +371,14 @@ static void Update_Space_Mouse(BYTE* space_struct) {
     uint16_t* p_mouse_button_2 = (uint16_t*)(space_struct + SPACE_STRUCT_MOUSE_BUTTON02);
     Get_Mouse_Buttons(p_mouse_button_1, p_mouse_button_2);
     
+    //check if guns fired by keyboard.
+    if (!*p_mouse_button_1) {
+        static BYTE* p_fire_guns = P2_ACTIONS_KEYS[static_cast<int>(P2_ACTIONS::Fire_Guns)];
+        if (Get_Key_State(p_fire_guns[0], p_fire_guns[1], p_fire_guns[2]))
+            *p_mouse_button_1 = 1;
+    }
+    *p_mouse_button_2 = 0;//ignore button2, Right_Click functionality done in Simulate_Key_Press/Simulate_Key_Release functions.
+
     uint16_t* p_mouse_button_pressed = (uint16_t*)(space_struct + SPACE_STRUCT_MOUSE_BUTTON_PRESSED);
     if (p_mouse_button_1 || p_mouse_button_2)
         *p_mouse_button_pressed = 1;
@@ -392,9 +400,8 @@ static void Update_Space_Mouse(BYTE* space_struct) {
 
     *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FX_OFFSET) = -f_mouse_x;
 
-    *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FR_OFFSET) = -(float)p2_joy_axes.r;
-    //uint16_t* p_mouse_button_2 = (uint16_t*)(space_struct + 0x14E);
-    if (*p_mouse_button_2) {
+    *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FR_OFFSET) = -(float)p2_joy_axes.r;//allow for rolling with keyboard.
+    if (p2_joy_axes.yaw_as_roll) {
         *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FR_OFFSET) = -f_mouse_x;
         *(float*)((BYTE*)p_pc_ship_struct + SPACE_PC_SHIP_STRUCT_FX_OFFSET) = 0;
     }
