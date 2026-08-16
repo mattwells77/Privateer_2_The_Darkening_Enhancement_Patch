@@ -413,9 +413,13 @@ void Modifications_Joystick() {
 	//This is still done in the Original_Joystick_Update function but no longer has an effect on the mouse y axis. Mice have their own setting for inverting the y axis.
 	MemWrite8(0x4503FD, 0x75, 0xEB);
 
-
 	//00421BD3 | .E8 E4980200                      CALL Set_Joy_Caps(float deadzone, x_max, y_max, x_entre, y_centre, x_; \DARK.Set_Joy_Caps(float deadzone, x_max, y_max, x_entre, y_centre, x_min, y_min, t_max, t_centre, t_min, joy_on, throttle_on)
 	FuncReplace32(0x421BD4, 0x0298E4, (DWORD)&Set_Legacy_Joy_Caps);
+
+	//skip start space option screen on space entry when joystick not setup.
+	MemWrite8(0x4397F9, 0x74, 0xEB);
+	//in space option menu skip joy setup on entry when joystick not setup.
+	MemWrite8(0x45CFD1, 0x75, 0xEB);
 
 	//0046A3AD | .  2E:FF15 98015700                 CALL DWORD PTR CS : [<&WINMM.joyGetPosEx>]
 	//MemWrite32(0x46A3B0, 0x570198, (DWORD)&p_Original_joyGetPosEx);
