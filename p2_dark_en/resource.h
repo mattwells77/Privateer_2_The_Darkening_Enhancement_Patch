@@ -398,12 +398,13 @@
 #define IDC_COMBO_SELECT_AXIS_PITCH     1135
 #define IDC_CHECK_REV_AXIS_YAW          1136
 #define IDC_CHECK_REV_AXIS_PITCH        1137
+#define IDC_STATIC_AS_BUTTON_1          1137
 #define IDC_CHECK_REV_AXIS_ROLL         1138
+#define IDC_STATIC_AS_BUTTON_2          1138
 #define IDC_CHECK_REV_AXIS_THROTTLE     1139
 #define IDC_COMBO_SELECT_AXIS_X         1140
 #define IDC_CHECK_REV_AXIS_X            1141
 #define IDC_COMBO_SELECT_AXIS_Y         1142
-#define IDC_CHECK_REV_AXIS_PITCH2       1143
 #define IDC_CHECK_REV_AXIS_Y            1143
 #define IDC_STATIC                      -1
 #define IDC_STATIC_XY_BOX               -1
@@ -415,7 +416,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        152
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1137
+#define _APS_NEXT_CONTROL_VALUE         1139
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
