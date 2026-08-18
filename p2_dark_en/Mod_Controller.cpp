@@ -420,6 +420,7 @@ void Modifications_Joystick() {
 	MemWrite8(0x4397F9, 0x74, 0xEB);
 	//in space option menu skip joy setup on entry when joystick not setup.
 	MemWrite8(0x45CFD1, 0x75, 0xEB);
+	MemWrite32(0x45D007, 0x02, 0x01);
 
 	//0046A3AD | .  2E:FF15 98015700                 CALL DWORD PTR CS : [<&WINMM.joyGetPosEx>]
 	//MemWrite32(0x46A3B0, 0x570198, (DWORD)&p_Original_joyGetPosEx);

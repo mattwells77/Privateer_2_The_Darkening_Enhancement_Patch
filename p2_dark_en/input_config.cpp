@@ -5034,15 +5034,17 @@ static HWND JoyConfig_Create(HWND hwnd, HINSTANCE hinstance) {
 //___________________
 BOOL JoyConfig_Main() {
 
+	wait_joy_config = TRUE;
+	Sleep(100);
 	PROFILE_TYPE saved_pro_type = current_pro_type;
 	current_pro_type = PROFILE_TYPE::Space;
 
 	if (!JoyConfig_Create(*p_p2_hWinMain, phinstDLL)) {
 		current_pro_type = saved_pro_type;
+		wait_joy_config = FALSE;
 		return FALSE;
 	}
 
-	wait_joy_config = TRUE;
 
 	P2_Active_App(FALSE);
 	ShowCursor(TRUE);
