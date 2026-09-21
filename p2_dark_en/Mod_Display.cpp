@@ -876,6 +876,9 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             
             //clear keyboard on re-activation.
             memset(p2_keyboard_state_main, 0, 256);
+
+            if (controller_enhancements_enabled)
+                Joysticks.Re_Initiate_Axes();
         }
         break;
     default:
