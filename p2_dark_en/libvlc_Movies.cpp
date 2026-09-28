@@ -177,8 +177,21 @@ BOOL Get_Movie_Path(const char* tgv_path, std::string* p_retPath) {
             Debug_Info_Movie("Skipping Movie: %s", movie_name);
             return -1;
         }
+
+        char movie_name_fixed[9]{ 0 };
+        Debug_Info_Movie("movie name original: %s", movie_name);
+        GetPrivateProfileStringA(movie_name, "name", movie_name, movie_name_fixed, _countof(movie_name_fixed), movie_config_path.c_str());
+        //end string if a comment or space char is encountered.
+        char* end_char = strchr(movie_name_fixed, ';');
+        if (end_char)
+            *end_char = '\0';
+        end_char = strchr(movie_name_fixed, ' ');
+        if (end_char)
+            *end_char = '\0';
+        Debug_Info_Movie("movie name fixed: %s", movie_name_fixed);
+
         p_retPath->assign(movie_dir);
-        p_retPath->append(movie_name);
+        p_retPath->append(movie_name_fixed);
         p_retPath->append(movie_ext);
     }
     Debug_Info_Movie("Get_Movie_Name_From_Path: %s", p_retPath->c_str());
