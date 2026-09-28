@@ -204,6 +204,31 @@ static bool Display_Exit() {
 }
 
 
+//______________________________________________________________________________________________________________________________________________________________________________________________________________________________
+static HWND __stdcall CreateWindowEx_DPIAware(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam) {
+    
+    //Set DPI Awareness before creating main window.
+    if (ConfigReadInt(L"MAIN", L"ENABLE_DPI_AWARENESS", CONFIG_MAIN_ENABLE_DPI_AWARENESS)) {
+        HMODULE hModule_user32 = GetModuleHandle(TEXT("user32.dll"));
+
+        BOOL(__stdcall * pSetProcessDpiAwarenessContext)(DPI_AWARENESS_CONTEXT value) = 0;
+        if (hModule_user32)
+            pSetProcessDpiAwarenessContext = (BOOL(__stdcall*)(DPI_AWARENESS_CONTEXT))GetProcAddress(hModule_user32, "SetProcessDpiAwarenessContext");
+
+        if (pSetProcessDpiAwarenessContext) {
+            if (!pSetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+                Debug_Info_Error("SetProcessDpiAwarenessContext Failed! Last Error: %d", GetLastError());
+        }
+        else {
+            if (!SetProcessDPIAware())
+                Debug_Info_Error("SetProcessDPIAware Failed! Last Error: %d", GetLastError());
+        }
+    }
+
+    return CreateWindowExA(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+}
+
+
 //_________________________________
 static BOOL Window_Setup(HWND hwnd) {
 
@@ -2206,4 +2231,15 @@ void Modifications_Display() {
     FuncWrite32(0x41D935, 0x83E845BF, (DWORD)&alt_x_window_sample_resume);
     MemWrite16(0x41D939, 0x02F8, 0x9090);
     //--------------------------------------------------------------------------------------
+
+    //---------------------Windows-DPI-Scale-Fix-----------------------
+    //Allows the game to play at your monitors native resolution when your monitors Windows DPI Scale setting is above 100%.
+    MemWrite8(0x46AC64, 0x2E, 0x90);
+    MemWrite16(0x46AC65, 0x15FF, 0xE890);
+    FuncWrite32(0x46AC67, 0x57012C, (DWORD)&CreateWindowEx_DPIAware);
+
+    MemWrite8(0x46AE15, 0x2E, 0x90);
+    MemWrite16(0x46AE16, 0x15FF, 0xE890);
+    FuncWrite32(0x46AE18, 0x57012C, (DWORD)&CreateWindowEx_DPIAware);
+    //-----------------------------------------------------------------
 }
