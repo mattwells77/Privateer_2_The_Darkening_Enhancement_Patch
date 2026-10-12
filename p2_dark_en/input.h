@@ -28,7 +28,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define KEYS_DAT_CODE	'K' + ('E' << 8) + ('Y' << 16) + ('S' << 24)
 #define GAME_CODE		'P' + ('2' << 8) + ('D' << 16) + ('K' << 24)
 
-#define JOYSTICK_PROFILE_VERSION	3
+#define JOYSTICK_PROFILE_VERSION	4
 #define JOYSTICK_CONFIG_PATH			L"controllers"
 
 #define NUM_MOUSE_BUTTONS	5
@@ -339,7 +339,7 @@ public:
 		centre_min = 0.0f;
 		centre_max = 1.0f;
 		centre_span = 1.0f;
-
+		dead_zone = 0.0f;
 	}
 	double min;
 	double max;
@@ -348,6 +348,7 @@ public:
 	double centre_min;
 	double centre_max;
 	double centre_span;
+	double dead_zone;
 };
 
 
