@@ -739,7 +739,7 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
                 //else
                 //    Debug_Info("WM_SETCURSOR ClipMouseCursor failed");
             }
-            break;
+            return TRUE;
         }
         if (is_cursor_clipped) {
             ClipCursor(nullptr);
@@ -747,32 +747,32 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             //Debug_Info("WM_SETCURSOR Mouse Cursor Un-Clipped");
         }
         if (hWin_Config_Control)
-            break;//dont alter the cursor visibility when joy config window open.
+            return TRUE;//dont alter the cursor visibility when joy config window open.
         WORD ht = LOWORD(lParam);
         if (HTCLIENT == ht) {
-
-            SetCursor(*p_p2_cursor);
+            if (*p_p2_cursor)
+                SetCursor(*p_p2_cursor);
 
             if (IsMouseInClient()) {
                 if (!is_cursor_hidden) {
                     is_cursor_hidden = true;
-                    ShowCursor(false);
+                    ShowCursor(FALSE);
                 }
             }
             else {
                 if (is_cursor_hidden) {
                     is_cursor_hidden = false;
-                    ShowCursor(true);
+                    ShowCursor(TRUE);
                 }
             }
         }
         else {
             if (is_cursor_hidden) {
                 is_cursor_hidden = false;
-                ShowCursor(true);
+                ShowCursor(TRUE);
             }
         }
-        break;
+        return TRUE;
     }
     case WM_WINDOWPOSCHANGING: {
         WINDOWPOS* winpos = (WINDOWPOS*)lParam;
@@ -841,6 +841,8 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         break;
     case WM_ACTIVATEAPP:
         SetWindowActivation(wParam);
+        if (hWin_Config_Control)
+            return 0;
         if (wParam == FALSE) {
             Debug_Info("WM_ACTIVATEAPP false");
             *p_p2_is_app_active = FALSE;
@@ -906,6 +908,12 @@ static LRESULT CALLBACK WinProc_Main(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
                 Joysticks.Re_Initiate_Axes();
         }
         break;
+    case WM_SETFOCUS:
+        Debug_Info("WM_SETFOCUS");
+        //if controller setup window active, return focus when main window regains focus.
+        if (hWin_Config_Control)
+            SetFocus(hWin_Config_Control);
+        return 0;
     default:
         break;
     }
