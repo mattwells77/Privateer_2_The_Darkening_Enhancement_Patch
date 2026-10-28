@@ -4840,13 +4840,120 @@ static INT_PTR CALLBACK DialogProc_Config_Keys2(HWND hwndDlg, UINT uMsg, WPARAM 
 }
 
 
+//___________________________________
+static void Update_Midi_Device_List() {
+	
+	if (!hWin_Config_Control)
+		return;
+	
+	MIDIOUTCAPS outcaps{};
+
+	HWND hwnd_sub = GetDlgItem(hWin_Config_Control, IDC_COMBO_MIDI_DEVICE);
+
+	UINT nMidiDeviceNum = midiOutGetNumDevs();
+	if (midi_device_id > nMidiDeviceNum)
+		midi_device_id = 0;
+
+	if (nMidiDeviceNum == 0) {
+		LoadString(phinstDLL, IDS_NONE, general_string_buff, _countof(general_string_buff));
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+		SendMessage(hwnd_sub, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+		EnableWindow(hwnd_sub, FALSE);
+		return;
+	}
+	
+	if(!IsWindowEnabled(hwnd_sub))
+		EnableWindow(hwnd_sub, TRUE);
+	
+	for (UINT i = 0; i < midiOutGetNumDevs(); i++) {
+		midiOutGetDevCaps(i, &outcaps, sizeof(MIDIOUTCAPS));
+		swprintf_s(general_string_buff, _countof(general_string_buff), L"%d: %s", i, outcaps.szPname);
+		SendMessage(hwnd_sub, CB_ADDSTRING, (WPARAM)0, (LPARAM)general_string_buff);
+	}
+
+	SendMessage(hwnd_sub, CB_SETCURSEL, (WPARAM)midi_device_id, (LPARAM)0);
+}
+
+
+//_____________________________________
+static void Initiate_Space_Midi_Music() {
+
+	if (*p_p2_gloabal_sound_enabled && *p_p2_space_music_enabled) {
+		if (*(DWORD*)((BYTE*)p_p2_space_struct + 0x11B0) == 0) {
+			p2_set_midi_unk01(0, (DWORD)((BYTE*)p_p2_space_struct + 0x11B8));
+			p2_set_midi_unk01(1, (DWORD)((BYTE*)p_p2_space_struct + 0x11BC));
+			//0x11C0 ?
+			p2_set_midi_unk01(2, (DWORD)((BYTE*)p_p2_space_struct + 0x11C4));
+			p2_set_midi_unk01(3, (DWORD)((BYTE*)p_p2_space_struct + 0x11C8));
+			p2_set_midi_unk01(4, (DWORD)((BYTE*)p_p2_space_struct + 0x11CC));
+			p2_set_midi_unk01(5, (DWORD)((BYTE*)p_p2_space_struct + 0x11D0));
+
+			*(DWORD*)((BYTE*)p_p2_space_struct + 0x11B8) = 0;
+			*(DWORD*)((BYTE*)p_p2_space_struct + 0x11BC) = 0;
+			*(DWORD*)((BYTE*)p_p2_space_struct + 0x11C0) = 0;
+			*(DWORD*)((BYTE*)p_p2_space_struct + 0x11C4) = 0;
+			*(DWORD*)((BYTE*)p_p2_space_struct + 0x11C8) = 0;
+			*(DWORD*)((BYTE*)p_p2_space_struct + 0x11CC) = 0;
+			*(DWORD*)((BYTE*)p_p2_space_struct + 0x11D0) = 0;
+
+			p2_start_midi_sequence(*(DWORD*)((BYTE*)p_p2_space_struct + 0x11B4));
+			*(DWORD*)((BYTE*)p_p2_space_struct + 0x11B0) = 1;
+			//Debug_Info("Initiate_Space_Midi_Music: DONE");
+		}
+	}
+	else if (*(DWORD*)((BYTE*)p_p2_space_struct + 0x11B0) != 0) {
+		p2_stop_midi_sequence();
+		*(DWORD*)((BYTE*)p_p2_space_struct + 0x11B0) = 0;
+	}
+}
+
+
+//_________________________________
+static void Stop_Space_Midi_Music() {
+
+	if (*(DWORD*)((BYTE*)p_p2_space_struct + 0x11B0) == 0)
+		return;
+
+	p2_stop_midi_sequence();
+	*(DWORD*)((BYTE*)p_p2_space_struct + 0x11B0) = 0;
+}
+
+
+//_____________________________________________________
+static void Set_Midi_Device_ID(UINT new_midi_device_id) {
+	
+	if (new_midi_device_id == midi_device_id)
+		return;
+	UINT num_midi_devices = midiOutGetNumDevs();
+	if (new_midi_device_id >= num_midi_devices)
+		new_midi_device_id = 0;
+	midi_device_id = new_midi_device_id;
+	ConfigWriteInt_InGame(L"MAIN", L"MIDI_DEVICE_ID", midi_device_id);
+
+	//only restart if already playing (in space flight).
+	BOOL is_playing = *(BOOL*)((BYTE*)p_p2_space_struct + 0x11B0);
+	
+	if (is_playing) 
+		Stop_Space_Midi_Music();
+
+	//reset all music, open the selected midi device
+	p2_music_stop();
+	p2_music_start(1, 8, 0);
+
+	//restart playback with selected device.
+	if (is_playing)
+		Initiate_Space_Midi_Music();
+}
+
+
 //______________________________________________________________________________________________________
 static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	
 	static HWND hwndParent = nullptr;
 	static bool was_Deactivated = false;
 	static HWND hWin_Config_Joy_Active = nullptr;
-	
+	static UINT midi_device_id_temp = 0;
+
 	switch (uMsg) {
 	case WM_INITDIALOG: {
 		hWin_Config_Control = hwndDlg;
@@ -4941,7 +5048,8 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 			checked = BST_CHECKED;
 		SendMessage(hwnd_sub, BM_SETCHECK, (WPARAM)checked, (LPARAM)0);
 
-
+		midi_device_id_temp = midi_device_id;
+		Update_Midi_Device_List();
 		break;
 	}
 	case WM_NOTIFY:
@@ -5036,6 +5144,7 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 				Legacy_Joystick.Save();
 			Mouse.Save();
 			Keys_Save();
+			Set_Midi_Device_ID(midi_device_id_temp);
 			//EnableWindow(hwndParent, TRUE);
 			DestroyWindow(hwndDlg);
 			return FALSE;
@@ -5059,6 +5168,10 @@ static INT_PTR CALLBACK DialogProc_Config_Control(HWND hwndDlg, UINT uMsg, WPARA
 					is_alt_flt_mode = true;
 				Set_Alt_Flight_Mode(is_alt_flt_mode);
 			}
+			return TRUE;
+		case IDC_COMBO_MIDI_DEVICE:
+			if (HIWORD(wParam) == CBN_SELCHANGE)
+				midi_device_id_temp = (UINT)(SendMessage(GetDlgItem(hwndDlg, LOWORD(wParam)), CB_GETCURSEL, (WPARAM)0, (LPARAM)0));
 			return TRUE;
 		default:
 			break;

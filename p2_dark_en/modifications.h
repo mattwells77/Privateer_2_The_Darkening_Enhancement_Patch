@@ -44,3 +44,5 @@ void Fade(BOOL out, BOOL instant);
 extern HMODULE hinst_DARK;
 extern BOOL wait_joy_config;//Pause space while configuring controllers.
 extern LARGE_INTEGER Frequency;
+
+extern UINT midi_device_id;

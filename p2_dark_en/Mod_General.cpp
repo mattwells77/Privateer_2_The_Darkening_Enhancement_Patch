@@ -26,12 +26,16 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "configTools.h"
 #include "dark.h"
 
+UINT midi_device_id = 0;
+
 const char* appPath = nullptr;
 
 
 //________________________________
 void Check_Optional_Enhancements() {
     
+    midi_device_id = ConfigReadInt_InGame(L"MAIN", L"MIDI_DEVICE_ID", CONFIG_MAIN_MIDI_DEVICE_ID);
+
     Modifications_Run_Game_From_Any_DIR();
 
     if (ConfigReadInt(L"MAIN", L"NO_CD", CONFIG_MAIN_NO_CD)) {
@@ -220,6 +224,17 @@ static BOOL __stdcall DeleteFile_UAC(LPCSTR lpFileName) {
 void* p_delete_file_uac = &DeleteFile_UAC;
 
 
+//________________________________________________________________________________________________
+static DWORD __stdcall AIL_midiOutOpen_Fix_Midi_ID(LPHMIDIOUT phmo, DWORD unknown, UINT uDeviceID) {
+    UINT num_midi_devices = midiOutGetNumDevs();
+    if (midi_device_id >= num_midi_devices) {
+        Debug_Info_Error("AIL_midiOutOpen_Fix_Midi_ID: ID:%d out of bounds, num devices:%d.", midi_device_id, num_midi_devices);
+        midi_device_id = 0;
+    }
+    return (*AIL_midiOutOpen)(phmo, unknown, midi_device_id);
+}
+
+
 //__________________________
 void Modifications_General() {
 
@@ -227,4 +242,13 @@ void Modifications_General() {
     MemWrite32(0x497824, 0x57031C, (DWORD)&p_create_file_uac);
     MemWrite32(0x49777C, 0x57032C, (DWORD)&p_delete_file_uac);
     //__________________________________________________________
+
+    //----------------change-the-midi-device-ID--------------------------
+    MemWrite8(0x418D90, 0x2E, 0x90);
+    MemWrite16(0x418D91, 0x15FF, 0xE890);
+    FuncWrite32(0x418D93, 0x5704AC, (DWORD)&AIL_midiOutOpen_Fix_Midi_ID);
+    MemWrite8(0x41917F, 0x2E, 0x90);
+    MemWrite16(0x419180, 0x15FF, 0xE890);
+    FuncWrite32(0x419182, 0x5704AC, (DWORD)&AIL_midiOutOpen_Fix_Midi_ID);
+    //-------------------------------------------------------------------
 }

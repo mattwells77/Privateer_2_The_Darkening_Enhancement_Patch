@@ -69,7 +69,7 @@ void* p_p2_proccess_joystick_data = nullptr;
 
 
 void** pp_p2_wail32_sample_handle = nullptr;
-void** pp_p2_wail32_midi_sequence_handle = nullptr;
+LPHMIDIOUT* pp_p2_wail32_midi_sequence_handle = nullptr;
 
 void(*p2_error_message_box)(const char* msg) = nullptr;
 
@@ -101,8 +101,15 @@ BYTE* p2_keyboard_state_last = nullptr;
 
 BYTE* p_p2_controller_flags = nullptr;
 
+BYTE* p_p2_space_music_enabled = nullptr;
+BYTE* p_p2_gloabal_sound_enabled = nullptr;
 
+void* p_p2_set_midi_unk01 = nullptr;
 
+void* p_p2_start_midi_sequence = nullptr;
+void(*p2_stop_midi_sequence)() = nullptr;
+
+DWORD(__stdcall** AIL_midiOutOpen)(LPHMIDIOUT phmo, DWORD unknown, UINT uDeviceID) = nullptr;
 
 
 //____________________________________________________________
@@ -165,6 +172,27 @@ void p2_update_and_proccess_joystick_data() {
 }
 
 
+//_________________________________________________
+void p2_set_midi_unk01(DWORD num, DWORD mem_offset) {
+
+	__asm {
+		mov edx, mem_offset
+		mov eax, num
+		call p_p2_set_midi_unk01
+	}
+}
+
+
+//____________________________________
+void p2_start_midi_sequence(DWORD num) {
+
+	__asm {
+		mov eax, num
+		call p_p2_start_midi_sequence
+	}
+}
+
+
 //_______________
 void DARK_Setup() {
 	p_p2_hWinMain = (HWND*)0x55D2C0;
@@ -188,7 +216,7 @@ void DARK_Setup() {
 	p_p2_main_image_buffer_rect = (IMAGE_BUFFER_RECT*)0x4F1C60;
 
 	pp_p2_wail32_sample_handle = (void**)0x4F01B4;
-	pp_p2_wail32_midi_sequence_handle = (void**)0x4F01B8;
+	pp_p2_wail32_midi_sequence_handle = (LPHMIDIOUT*)0x4F01B8;
 
 
 	p2_error_message_box = (void(*)(const char*))0x46B5A0;
@@ -239,4 +267,14 @@ void DARK_Setup() {
 	p_p2_y_axis_orientation = (BYTE*)0x52E063;
 
 	p_p2_space_object_type_struct_list = (void*)0x4C6924;
+
+	p_p2_space_music_enabled = (BYTE*)0x52E05C;
+	p_p2_gloabal_sound_enabled = (BYTE*)0x52E05A;
+
+	p_p2_set_midi_unk01 = (void*)0x41A320;
+	p_p2_start_midi_sequence = (void*)0x41A470;
+
+	p2_stop_midi_sequence = (void(*)())0x41A66C;
+
+	AIL_midiOutOpen = (DWORD(__stdcall**)(LPHMIDIOUT, DWORD, UINT))0x5704AC;
 }

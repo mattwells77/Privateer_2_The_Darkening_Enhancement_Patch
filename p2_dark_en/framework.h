@@ -64,10 +64,13 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #include <joystickapi.h>
 
+#include <mmeapi.h>
+
 // Link library dependencies
 #pragma comment(lib, "Shlwapi.lib")
 
 #pragma comment(lib, "libvlc.lib")
 #pragma comment(lib, "libvlccore.lib")
+//#pragma comment(lib, "winmm.lib")
 
 extern HINSTANCE phinstDLL;

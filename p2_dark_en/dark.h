@@ -142,19 +142,30 @@ extern WORD* p_p2_space_struct_exit_flag;
 
 extern BYTE* p_p2_y_axis_orientation;
 
+extern BYTE* p_p2_space_music_enabled;
+extern BYTE* p_p2_gloabal_sound_enabled;
+extern LPHMIDIOUT* pp_p2_wail32_midi_sequence_handle;
+extern void** pp_p2_wail32_sample_handle;
+
 void p2_update_joystick_data(void* p_space_struct);
 void p2_proccess_joystick_data(void* p_space_struct);
 void p2_update_and_proccess_joystick_data();
 
-extern void* p_p2_update_joystick_data;
-extern void* p_p2_proccess_joystick_data;
-
-extern void** pp_p2_wail32_sample_handle;
-extern void** pp_p2_wail32_midi_sequence_handle;
+void p2_set_midi_unk01(DWORD num, DWORD mem_offset);
+void p2_start_midi_sequence(DWORD num);
 
 bool p2_check_key_state(BYTE scan_code, BYTE flag_1, BYTE flag_2);
 
-DWORD p2_music_start(DWORD flag_1, DWORD flag_2, DWORD flag_3);
+DWORD p2_music_start(DWORD start_midi, DWORD flag_2, DWORD flag_3);
+
+extern void* p_p2_update_joystick_data;
+extern void* p_p2_proccess_joystick_data;
+
+extern void* p_p2_set_midi_unk01;
+extern void* p_p2_start_midi_sequence;
+
+extern void(*p2_stop_midi_sequence)();
+
 extern DWORD(*p2_music_stop)();
 
 extern void(*p2_error_message_box)(const char* msg);
@@ -169,4 +180,6 @@ extern void(*p2_movie_active)(LONG* p_active_flag);
 extern BOOL(*p2_movie_play)(const char* path, BOOL clear_on_start, BOOL fade_out);
 
 extern void(*p2_update_keyboard_state_ddinput)();
+
+extern DWORD(__stdcall** AIL_midiOutOpen)(LPHMIDIOUT phmo, DWORD unknown, UINT uDeviceID);
 

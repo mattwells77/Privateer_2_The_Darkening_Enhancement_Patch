@@ -284,6 +284,7 @@
 #define IDS_XGAMEPAD_BUTT_15            355
 #define IDS_XGAMEPAD_BUTT_16            356
 #define IDS_XGAMEPAD_BUTT_17            357
+#define IDS_DEFAULT                     358
 #define IDC_BUTTON_YAW                  1000
 #define IDC_LIST_BUTTONS                1002
 #define IDC_LIST_ACTIONS                1002
@@ -429,6 +430,7 @@
 #define IDC_EDIT_DEADZONE               1139
 #define IDC_COMBO_SELECT_AXIS_X         1140
 #define IDC_CHECK_REV_AXIS_X            1141
+#define IDC_COMBO_MIDI_DEVICE           1141
 #define IDC_COMBO_SELECT_AXIS_Y         1142
 #define IDC_CHECK_REV_AXIS_Y            1143
 #define IDC_STATIC                      -1
@@ -441,7 +443,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        152
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1140
+#define _APS_NEXT_CONTROL_VALUE         1142
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
