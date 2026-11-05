@@ -235,6 +235,20 @@ static DWORD __stdcall AIL_midiOutOpen_Fix_Midi_ID(LPHMIDIOUT phmo, DWORD unknow
 }
 
 
+//_____________________________________________________________
+static void __declspec(naked) check_command_line_overides(void) {
+
+    __asm {
+        pushad
+        call Check_Command_Line_Overrides
+        popad
+
+        mov eax, 1
+        ret
+    }
+}
+
+
 //__________________________
 void Modifications_General() {
 
@@ -251,4 +265,8 @@ void Modifications_General() {
     MemWrite16(0x419180, 0x15FF, 0xE890);
     FuncWrite32(0x419182, 0x5704AC, (DWORD)&AIL_midiOutOpen_Fix_Midi_ID);
     //-------------------------------------------------------------------
+
+
+    MemWrite8(0x4898EA, 0xB8, 0xE8);
+    FuncWrite32(0x4898EB, 0x01, (DWORD)&check_command_line_overides);
 }

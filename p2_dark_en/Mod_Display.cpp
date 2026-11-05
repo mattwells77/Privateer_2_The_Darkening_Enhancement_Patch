@@ -232,7 +232,7 @@ static HWND __stdcall CreateWindowEx_DPIAware(DWORD dwExStyle, LPCSTR lpClassNam
 //_________________________________
 static BOOL Window_Setup(HWND hwnd) {
 
-    Check_Command_Line_Overrides();
+    //Check_Command_Line_Overrides();
 
     hinst_DARK = GetModuleHandleW(nullptr);
 
