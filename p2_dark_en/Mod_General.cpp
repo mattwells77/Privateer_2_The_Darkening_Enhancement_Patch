@@ -102,8 +102,12 @@ void Modifications_No_CD() {
     //shift the movie path offset by one to remove the first backslash character, so that "\movies\" becomes "movies\".
     MemWrite32(0x41B1CE, 0x4A021B, 0x4A021C);
 
-    //skip current cd number check
-    MemWrite16(0x422BA9, 0x1375, 0x9090);
+    if (ConfigReadInt(L"MAIN", L"NO_CD_UNRESTRICTED_MISSIONS", CONFIG_MAIN_NO_CD_UNRESTRICTED_MISSIONS)) {
+        //skip current cd number check
+        MemWrite16(0x422BA9, 0x1375, 0x9090);
+        Debug_Info("Optional_Enhancement: NO-CD: Mission selection unrestricted by CD number.");
+    }
+
 }
 
 

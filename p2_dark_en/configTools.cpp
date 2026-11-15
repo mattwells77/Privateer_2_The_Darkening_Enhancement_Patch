@@ -69,6 +69,8 @@ static BOOL Build_Config() {
     config_stream << "AUDIO_LANG=" << CONFIG_MAIN_AUDIO_LANG << endl;
 
     config_stream << "NO_CD=" << CONFIG_MAIN_NO_CD << endl;
+    config_stream << "NO_CD_UNRESTRICTED_MISSIONS=" << CONFIG_MAIN_NO_CD_UNRESTRICTED_MISSIONS << endl;
+
     config_stream << "CYCLE_HZ_GUI=" << CONFIG_MAIN_CYCLE_HZ_GUI << endl;
 
 
@@ -187,6 +189,9 @@ static BOOL Update_Config() {
 
     val = ConfigReadInt(L"MAIN", L"NO_CD", CONFIG_MAIN_NO_CD);
     ConfigWriteInt(L"MAIN", L"NO_CD", val);
+    val = ConfigReadInt(L"MAIN", L"NO_CD_UNRESTRICTED_MISSIONS", CONFIG_MAIN_NO_CD_UNRESTRICTED_MISSIONS);
+    ConfigWriteInt(L"MAIN", L"NO_CD_UNRESTRICTED_MISSIONS", val);
+ 
     val = ConfigReadInt(L"MAIN", L"CYCLE_HZ_GUI", CONFIG_MAIN_CYCLE_HZ_GUI);
     ConfigWriteInt(L"MAIN", L"CYCLE_HZ_GUI", val);
 
