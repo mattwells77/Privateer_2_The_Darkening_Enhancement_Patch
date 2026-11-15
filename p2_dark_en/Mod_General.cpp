@@ -115,6 +115,14 @@ void Modifications_Run_Game_From_Any_DIR() {
     appPath = GetAppPathA();
     Debug_Info("Running game from: %s", appPath);
 
+    //Disable function which gets the current directory than removes the drive letter and colon. It's purpose is vague and it's broken(the ECX register is supposed to contain the buffer size but it's not set).
+    MemWrite8(0x418B94, 0x53, 0xC3);
+    //These are used to set the current directory when the music is stopped. Their purpose is also vague.
+    MemWrite32(0x41A172, 0x4F0474, (DWORD)appPath);
+    MemWrite32(0x41A4A9, 0x4F0474, (DWORD)appPath);
+    MemWrite32(0x41A696, 0x4F0474, (DWORD)appPath);
+    MemWrite32(0x41A717, 0x4F0474, (DWORD)appPath);
+
     //These offsets are used to switch the current directory from the CD to install path.
     //They and are redundant when using the No_CD mod.
     //reroute the original install path pointer to that of the current directory.
