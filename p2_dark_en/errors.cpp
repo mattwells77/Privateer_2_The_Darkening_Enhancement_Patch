@@ -25,6 +25,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "memwrite.h"
 #include "configTools.h"
 #include "version.h"
+#include "dark.h"
 
 using namespace std;
 
@@ -88,6 +89,9 @@ void __Debug_Info(DWORD flags, const char* format, ...) {
     if (Is_Errors_Stream() && (flags & Get_Debug_Flags()))
         errors_stream << msg_buff << endl;
 #endif // PRINT_DEBUG_INFO
+
+    if (flags & DEBUG_INFO_CRITICAL)
+        p2_error_message_box(format);
 }
 
 

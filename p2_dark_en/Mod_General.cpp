@@ -21,6 +21,8 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include "pch.h"
+
+#include "Display_DX11.h"
 #include "modifications.h"
 #include "memwrite.h"
 #include "configTools.h"
@@ -261,6 +263,16 @@ static void __declspec(naked) check_command_line_overides(void) {
 }
 
 
+//__________________________________________________________________________________________
+static int __stdcall MessageBox_Exit(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType) {
+
+    MessageBoxA(*p_p2_hWinMain, lpText, lpCaption, MB_ICONERROR | MB_SYSTEMMODAL);
+    Display_Dx_Destroy();
+    return IDOK;
+}
+void* p_message_box_exit = &MessageBox_Exit;
+
+
 //__________________________
 void Modifications_General() {
 
@@ -281,4 +293,9 @@ void Modifications_General() {
 
     MemWrite8(0x4898EA, 0xB8, 0xE8);
     FuncWrite32(0x4898EB, 0x01, (DWORD)&check_command_line_overides);
+
+
+
+    //0046B627 | .  2E:FF15 48015700    CALL DWORD PTR CS : [<&USER32.MessageBoxA>]
+    MemWrite32(0x46B62A, 0x570148, (DWORD)&p_message_box_exit);
 }
