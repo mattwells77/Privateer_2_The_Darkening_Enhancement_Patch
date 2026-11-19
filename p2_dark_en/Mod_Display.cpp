@@ -232,7 +232,9 @@ static HWND __stdcall CreateWindowEx_DPIAware(DWORD dwExStyle, LPCSTR lpClassNam
 //_________________________________
 static BOOL Window_Setup(HWND hwnd) {
 
-    //Check_Command_Line_Overrides();
+    wchar_t wchar_buff[10];
+    ConfigReadString(L"AUDIO", L"VLC_PREAMP_VOLUME", CONFIG_AUDIO_VLC_PREAMP_VOLUME, wchar_buff, 10);
+    LibVlc_Set_Preamp((float)_wtof(wchar_buff));
 
     hinst_DARK = GetModuleHandleW(nullptr);
 

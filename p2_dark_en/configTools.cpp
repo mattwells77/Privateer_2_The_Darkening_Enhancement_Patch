@@ -88,6 +88,8 @@ static BOOL Build_Config() {
     config_stream << "PATH=" << CONFIG_MOVIES_PATH << endl;
     config_stream << "EXT=" << CONFIG_MOVIES_EXT << endl;
  
+    config_stream << endl << "[AUDIO]" << endl;
+    config_stream << "VLC_PREAMP_VOLUME=" << CONFIG_AUDIO_VLC_PREAMP_VOLUME << endl;
 
     config_stream << endl << "[MOUSE]" << endl;
     config_stream << "DEAD_ZONE=" << CONFIG_MOUSE_DEAD_ZONE << endl;
@@ -216,6 +218,10 @@ static BOOL Update_Config() {
     ConfigWriteString(L"MOVIES", L"PATH", wchar_buff);
     ConfigReadString(L"MOVIES", L"EXT", CONFIG_MOVIES_EXT, wchar_buff, MAX_PATH);
     ConfigWriteString(L"MOVIES", L"EXT", wchar_buff);
+
+
+    ConfigReadString(L"AUDIO", L"VLC_PREAMP_VOLUME", CONFIG_AUDIO_VLC_PREAMP_VOLUME, wchar_buff, MAX_PATH);
+    ConfigWriteString(L"AUDIO", L"VLC_PREAMP_VOLUME", wchar_buff);
 
 
     val = ConfigReadInt(L"MOUSE", L"DEAD_ZONE", CONFIG_MOUSE_DEAD_ZONE);

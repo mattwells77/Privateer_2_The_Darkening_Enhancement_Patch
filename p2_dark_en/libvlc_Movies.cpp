@@ -310,6 +310,8 @@ LibVlc_Movie::LibVlc_Movie(const char* in_path) {
     paused = false;
     is_vlc_playing = false;
    
+    mediaPlayer.setEqualizer(vlc_equalizer);
+
     using namespace std::placeholders; // for `_1`
 
     mediaPlayer.eventManager().onPlaying(std::bind(&LibVlc_Movie::on_play, this));
