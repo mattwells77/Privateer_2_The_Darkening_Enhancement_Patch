@@ -50,17 +50,43 @@ void Check_Optional_Enhancements() {
 }
 
 
+//___________________________
+static void Save_Current_CD() {
+    
+    ConfigWriteInt_InGame(L"MAIN", L"CD_NUM", *p_p2_current_CD_loaded);
+    Debug_Info("Update last CD in config file, %d", *p_p2_current_CD_loaded);
+}
+
+
+//___________________________
+static void Load_Current_CD() {
+
+    *p_p2_current_CD_loaded = (WORD)ConfigReadInt_InGame(L"MAIN", L"CD_NUM", CONFIG_MAIN_CD_NUM);
+    Debug_Info("Get last CD from config file, %d", *p_p2_current_CD_loaded);
+}
+
+
 //______________________________________________
 static void __declspec(naked) No_CD_set_cd(void) {
     //set the currently loaded cd number to the number called for on the EAX register.
     __asm {
-        push edx
+        cmp ax, 0
+        jne check_neg_1
+        ret
+        check_neg_1:
+        cmp ax, -1
+        jne set_cd_num
+        mov ax, 1
 
+        set_cd_num:
+        push edx
         mov edx, p_p2_current_CD_loaded
         mov word ptr ds : [edx], ax
-
         pop edx
 
+        pushad
+        call Save_Current_CD
+        popad
         ret
     }
 }
@@ -70,6 +96,10 @@ static void __declspec(naked) No_CD_set_cd(void) {
 static void __declspec(naked) No_CD_check_cd(void) {
     //skip opening cd.dat to get the currently loaded CD, if the currently loaded CD num is 0(no cd) than set cd to 1.
     __asm {
+        pushad
+        call Load_Current_CD
+        popad
+        
         mov eax, p_p2_current_CD_loaded
         cmp word ptr ds : [eax], 0
         jne exitfunc
